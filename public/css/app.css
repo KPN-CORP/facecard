@@ -1,0 +1,238 @@
+
+
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Inter', sans-serif; 
+        font-size: 14px; 
+    }
+    .card {
+        border: 1px solid #e9ecef;
+        border-radius: 0.5rem;
+    }
+    .card-body {
+        padding: 1.5rem;
+    }
+   
+    .table-summary {
+        font-size: 14px; 
+        width: 100%;
+    }
+    .table-summary td {
+        padding: 0.4rem 0; 
+        vertical-align: top;
+        border: none;
+    }
+    .table-summary .label-col {
+        width: 35%;
+        padding-right: 0.5rem;
+        color: #6c757d;
+    }
+    .table-summary .colon-col {
+        width: 2%;  
+        text-align: center;
+        color: #6c757d;
+    }
+    .table-summary .value-col {
+        width: 63%; 
+        font-weight: 500;
+        color: #212529;
+    }
+
+    .section-title {
+        color: #c82333;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 1rem;
+        font-size: 16px;
+    }
+    .form-control[readonly], .form-select[readonly] {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        font-weight: 500;
+        text-align: center;
+    }
+    .competency-evaluation-table {
+        border-collapse: collapse; width: 100%; font-size: 0.8rem;
+    }
+    .competency-evaluation-table td, .competency-evaluation-table th {
+        border: 1px solid #ddd; padding: 6px 8px; text-align: left; vertical-align: middle;
+    }
+    .competency-evaluation-table th { background-color: #f0f0f0; color: #333; font-weight: bold; text-align: center;}
+    .indicator-group-cell { font-weight: bold; text-align: center; width: 120px; vertical-align: middle !important; color: gray; }
+    .competency-level-row.active-highlight { background-color: #d1e7dd !important; font-weight: bold; }
+    .competency-level-row.active-highlight td { color: #0f5132; }
+    .competency-level-row.active-highlight .fit-count-label-cell::after { content: " ✔"; color: #0f5132; font-weight: bold; }
+    .strength-dev-table { width: 100%; font-size: 0.9rem;}
+    .strength-dev-table th { background-color: #f0f0f0; padding: .5rem; }
+    .strength-dev-table td { padding: .5rem; vertical-align: top; }
+    
+    .nav-pills {
+        gap: 4px; 
+    }
+    .nav-pills .nav-link {
+        color: #6c757d;
+        font-weight: 600;
+        padding: 8px 16px; 
+        border-radius: 0.375rem; 
+    }
+    .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+        color: #fff;
+        background-color: #c82333; 
+    }
+
+    .btn-back {
+        font-weight: 500;
+        color: #6c757d;
+        text-decoration: none;
+    }
+    .btn-back:hover {
+        color: #212529;
+    }
+
+    .table-custom-header th {
+    background-color: #F9FAFB;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: black;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.table > tbody > tr > td {
+    border-bottom: 1px solid #e9ecef;
+}
+
+html, body {
+    font-size: 14px;
+    font-family: 'Inter', sans-serif; 
+}
+
+.sidebar .nav-link, .sidebar a {
+    font-size: 14px !important; 
+}
+
+.permissions-nav .nav-link.active {
+        background-color: #c82333 !important;
+        color: white !important;
+    }
+    .permissions-nav .nav-link {
+        color: #495057;
+        border-radius: 0.25rem;
+    }
+    .permissions-nav {
+        background-color: #f8f9fa;
+        min-width: 200px;
+    }
+    .permissions-container {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        overflow: hidden;
+    }
+    .form-check-input:checked {
+        background-color: #c82333;
+        border-color: #c82333;
+    }
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+        background-color: #f0f0f0;
+        border: 1px solid #dcdcdc;
+        color: #333;
+        padding: 5px 10px;
+        font-weight: 500;
+    }
+
+    .main-menu .nav-link,
+    .main-menu .nav-link:focus,
+    .main-menu .nav-link:hover,
+    .main-menu .nav-link:active {
+        --bs-nav-link-color: #c82333 !important;
+        --bs-nav-link-hover-color: #c82333 !important;
+        color: #121212 !important;
+        background-color: transparent !important;
+    }
+
+    /* Parent item aktif */
+    .main-menu .nav-link.custom-active {
+        background-color: rgba(248, 215, 218, 0.5) !important;
+        color: #c82333 !important;
+        border-radius: 6px;
+        font-weight: 200;
+    }
+
+    /* Submenu aktif */
+    .main-menu .nav-link.sub-active {
+        background-color: rgba(197, 171, 174, 0.5) !important;
+        color: #c82333 !important;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    /* Bootstrap icons inherit warna teks */
+    .main-menu .bi {
+        color: inherit !important;
+    }
+
+    .arrow-icon {
+        transition: transform 0.2s;
+    }
+
+    .submenu {
+        padding-left: 2.25rem;
+    }
+
+    /* Reset default Bootstrap .text-primary & .active */
+    .text-primary,
+    .main-menu .nav-link.active {
+        color: #c82333 !important;
+        border-radius: 8px;
+        font-weight: 200;
+    }
+    
+    .text-info-blue {
+    color: #0d6efd !important; /* Bootstrap's default blue color */
+}
+
+.pagination-wrapper {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid #dee2e6;
+        background-color: #fff;
+    }
+
+    /* Kustomisasi untuk Tampilan Pagination */
+    .custom-pagination .page-item .page-link {
+        border: none;
+        background-color: transparent;
+        color: #6c757d;
+        font-size: 1rem;
+        margin: 0 4px;
+        padding: 0.5rem;
+        min-width: 36px;
+        height: 36px;
+        line-height: 1.5;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .custom-pagination .page-item.active .page-link {
+        background-color: #c82333; 
+        color: white;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .custom-pagination .page-item.disabled .page-link {
+        color: #ced4da; 
+    }
+
+    .custom-pagination .page-item:not(.active) .page-link:hover {
+        background-color: #f1f1f1;
+    }
+
+
+
+    
