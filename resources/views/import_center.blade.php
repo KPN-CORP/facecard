@@ -127,6 +127,7 @@
                             @can('import_talent_box') <option value="talent_box">Talent Box</option> @endcan
                             @can('import_talent_status') <option value="talent_status">Talent Status</option> @endcan
                             @can('import_proposed_grade') <option value="proposed_grade">Proposed Grade</option> @endcan
+                            @can('import_internal_movement')<option value="internal_movement">Internal Movement</option>@endcan
                         </select>
                     </div>
 
@@ -171,6 +172,15 @@
                         <ul class="mb-0 small" style="padding-left: 1.2rem;">
                             <li>Kolom 'employee_id' yang diawali '0' harus diberi tanda petik satu (contoh: `'012345`).</li>
                             <li>Proposed Grade diisi dengan huruf kapital "(2A)"</li>
+                        </ul>
+                    </div>
+
+                    <div id="internal-instructions" class="alert alert-info mt-3" role="alert" style="display: none;">
+                        <h4 class="alert-heading h6">Pastikan format file Excel Anda sesuai :</h4>
+                        <ul class="mb-0 small" style="padding-left: 1.2rem;">
+                            <li>Kolom 'employee_id' yang diawali '0' harus diberi tanda petik satu (contoh: `'012345`).</li>
+                            <li>Format tanggal untuk 'from_date' dan 'to_date' adalah (MM-DD-YYYY).</li>
+                            <li>Job Grade diisi dengan huruf kapital "(2A)"</li>
                         </ul>
                     </div>
                     
@@ -238,6 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'talent_box': '{{ asset("templates/template_talent_box.xlsx") }}',
         'talent_status': '{{ asset("templates/template_talent_status.xlsx") }}',
         'proposed_grade': '{{ asset("templates/template_proposed_grade.xlsx") }}',
+        'internal_movement': '{{ asset("templates/template_internal_movement.xlsx") }}',
     };
     
     if (importTypeSelect) {
@@ -250,6 +261,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const idpInstructions = document.getElementById('idp-instructions');
         const talentInstructions = document.getElementById('talent-instructions');
         const proposedInstructions = document.getElementById('proposed-instructions');
+        const internalInstructions = document.getElementById('internal-instructions');
         
         // Hide Instruction
         competencyInstructions.style.display = 'none';
@@ -257,6 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
         idpInstructions.style.display = 'none';
         talentInstructions.style.display = 'none';
         proposedInstructions.style.display = 'none';
+        internalInstructions.style.display = 'none';
         
         // Logic link download 
         if (selectedType && templates[selectedType]) {
@@ -274,12 +287,14 @@ document.addEventListener('DOMContentLoaded', function() {
             competencyInstructions.style.display = 'block';
         } else if (selectedType === 'idp') {
             idpInstructions.style.display = 'block';
-        } else if (selectedType === 'data_master') { // Untuk Matrix Grades
+        } else if (selectedType === 'data_master') {
             dataMasterInstructions.style.display = 'block';
         } else if (selectedType === 'talent_box' || selectedType === 'talent_status') { // Untuk Talent Box & Status
             talentInstructions.style.display = 'block';
         } else if (selectedType === 'proposed_grade') {
             proposedInstructions.style.display = 'block';
+        } else if (selectedType === 'internal_movement') {
+            internalInstructions.style.display = 'block';
         }
     });
 

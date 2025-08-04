@@ -14,6 +14,15 @@ class Employees extends Model
     protected $table = 'employees';
     protected $guarded = ['id'];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'language_ability' => 'array', 
+    ];
+
     public function user()
     {
         return $this->hasOne(User::class, 'employee_id', 'employee_id');

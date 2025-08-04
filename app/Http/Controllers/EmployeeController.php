@@ -13,6 +13,8 @@ use App\Models\ResultSummary;
 use App\Models\MatrixGradeConfig;
 use App\Models\IndividualDevelopmentPlan;
 use App\Models\DevelopmentModel;
+use App\Models\InternalMovement;
+use App\Models\DevelopmentPlanMaster;
 use App\Imports\DevelopmentPlanImport;
 use App\Imports\CompetencyAssessmentImport;
 use App\Imports\SingleEmployeeDevelopmentPlanImport;
@@ -24,6 +26,7 @@ use App\Exports\ReportExport;
 use App\Models\Role;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class EmployeeController extends Controller
 {
@@ -41,6 +44,10 @@ public function index($employeeId = null, Request $request)
         : Employees::firstOrFail();
 
     $employeeId = $employee->employee_id;
+
+    $internalMovements = \App\Models\InternalMovement::where('employee_id', $employeeId)
+        ->orderBy('from_date', 'desc')
+        ->get();
 
     // --- Pagination IDP Data ---
     $developmentModels = DevelopmentModel::all();
@@ -98,6 +105,7 @@ public function index($employeeId = null, Request $request)
         'competencyNames' => array_keys(CompetencyAssessment::getCompetencyMap()),
         'needsRenewal' => $needsRenewal,
         'uniqueGradeLevels' => $uniqueGradeLevels, 
+        'internalMovements' => $internalMovements,
 
         // IDP Variable Pagination
         'developmentModels' => $developmentModels,
@@ -246,39 +254,33 @@ public function index($employeeId = null, Request $request)
 
 
     public function showIdpPage($employeeId)
-    {
+{
     $employee = \App\Models\Employees::where('employee_id', $employeeId)->firstOrFail();
     $developmentModels = \App\Models\DevelopmentModel::all();
 
-    $competencyNameOptions = [
-        'Synergized Team, PL 1', 'Synergized Team, PL 2', 'Synergized Team, PL 3', 'Synergized Team, PL 4',
-        'Integrity for All Action, PL 1', 'Integrity for All Action, PL 2', 'Integrity for All Action, PL 3', 'Integrity for All Action, PL 4',
-        'Growth for Co Prosperity, PL 1', 'Growth for Co Prosperity, PL 2', 'Growth for Co Prosperity, PL 3', 'Growth for Co Prosperity, PL 4',
-        'Adaptive to Change, PL 1', 'Adaptive to Change, PL 2', 'Adaptive to Change, PL 3', 'Adaptive to Change, PL 4',
-        'Passion for Excellence, PL 1', 'Passion for Excellence, PL 2', 'Passion for Excellence, PL 3', 'Passion for Excellence, PL 4',
-        'Manage & Planning, PL 1', 'Manage & Planning, PL 2', 'Manage & Planning, PL 3', 'Manage & Planning, PL 4',
-        'Decision Making, PL 1', 'Decision Making, PL 2', 'Decision Making, PL 3', 'Decision Making, PL 4',
-        'Developing Others, PL 1', 'Developing Others, PL 2', 'Developing Others, PL 3', 'Developing Others, PL 4',
-        'Relationship Building, PL 1', 'Relationship Building, PL 2', 'Relationship Building, PL 3', 'Relationship Building, PL 4',
-    ];
+    // 1. Get all unique, user-entered values from this employee's history
+    $allEmployeePlans = \App\Models\IndividualDevelopmentPlan::where('employee_id', $employeeId)->get();
+    $dbCompetencyNames = $allEmployeePlans->pluck('competency_name')->unique()->filter();
+    $dbDevPrograms = $allEmployeePlans->pluck('development_program')->unique()->filter();
+    $dbReviewTools = $allEmployeePlans->pluck('review_tools')->unique()->filter();
 
-    $developmentProgramOptions = [
-        'Effective Team Communication', 'Effective Team Engagement', 'Team Facilitation & Communication', 'Leading by Example in Teams',
-        'Company Values & Ethical Practices', 'Building & Sustaining a Culture of Integrity', 'Integrity Education & Ethical Conflict Management', 'Building a Culture of Integrity in Leadership',
-        'Winning Together as a Team', 'Harmony Environment', 'Creating a Harmonious & Goal-Oriented Team', 'Building a Sustainable Team Culture',
-        'Adapting to Change Effectively', 'Helping Teams Adapt & Grow', 'Managing & Innovating Through Change', 'Strategic Change Management',
-        'Self-Reflection & Personal Growth', 'Seeking Feedback & Inspiring Effort', 'Guiding, Motivating & Inspiring Creativity', 'Exceeding Expectations Through Innovation',
-        'Effective Planning & Time Management', 'Effective Work Planning & Execution', 'Team Task Planning & Execution', 'Efficient Project & Resource Management',
-        'Fundamentals of Effective Decision-Making', 'Data-Driven Decision Making', 'Impactful Problem Solving & Decisions', 'Effective Decision-Making Strategies',
-        'Personal Growth & Developing Others', 'Team Development & Growth Strategies', 'Strategic Team Development Planning', 'Cross-Functional Development & Mentorship',
-        'Building Strong Stakeholder Relationships', 'Building Professional & Empathetic Relationships', 'Building Trust & Translating Goals into Action', 'Strategic Networking & Decision-Making',
-    ];
-    
-    $reviewToolOptions = [
-        'Assessment Center', 'Superior Rating', 'Self Assessment', 'Peer Review', '360 Degree Feedback',
-        'KPI Review', 'Management Review', 'Project Based Evaluation',
-    ];
+    // 2. Get the master list of options from the new database table
+    $masterOptions = DevelopmentPlanMaster::all()->groupBy('type');
+    $masterCompetencyNames = $masterOptions->get('competency_name', collect())->pluck('value');
+    $masterDevPrograms = $masterOptions->get('development_program', collect())->pluck('value');
+    $masterReviewTools = $masterOptions->get('review_tools', collect())->pluck('value');
 
+    // 3. Merge the master list with the user's historical data to create the final dropdown options
+    $competencyNameOptions = $masterOptions->get('competency_name', collect())->pluck('value')
+        ->merge($dbCompetencyNames)->unique()->sort()->values();
+        
+    $developmentProgramOptions = $masterOptions->get('development_program', collect())->pluck('value')
+        ->merge($dbDevPrograms)->unique()->sort()->values();
+        
+    $reviewToolOptions = $masterOptions->get('review_tools', collect())->pluck('value')
+        ->merge($dbReviewTools)->unique()->sort()->values();
+
+    // 4. Handle pagination (this logic remains the same)
     $paginatedPlans = [];
     foreach ($developmentModels as $model) {
         $paginatedPlans[$model->id] = \App\Models\IndividualDevelopmentPlan::where('employee_id', $employeeId)
@@ -291,6 +293,7 @@ public function index($employeeId = null, Request $request)
         ->orderBy('id', 'desc')
         ->paginate(5, ['*'], 'page_uncategorized');
 
+    // 5. Return the view with the new dynamic options
     return view('individual_dev_content', [ 
         'employee' => $employee,
         'paginatedPlans' => $paginatedPlans,
@@ -321,6 +324,14 @@ public function index($employeeId = null, Request $request)
             'result_evidence' => 'nullable|string',
         ]);
 
+        $validatedData['competency_name']     = Str::title($validatedData['competency_name']);
+        $validatedData['development_program'] = Str::title($validatedData['development_program']);
+        $validatedData['review_tools']        = Str::title($validatedData['review_tools']);
+
+        $this->formatAndStoreMasterOption('competency_name', $validatedData['competency_name']);
+        $this->formatAndStoreMasterOption('development_program', $validatedData['development_program']);
+        $this->formatAndStoreMasterOption('review_tools', $validatedData['review_tools']);
+    
         IndividualDevelopmentPlan::create($validatedData);
         return redirect()->back()->with('success', 'Development Plan added successfully!');
     }
@@ -380,9 +391,35 @@ public function index($employeeId = null, Request $request)
             'result_evidence' => 'nullable|string',
         ]);
 
+        $validatedData['competency_name']     = Str::title($validatedData['competency_name']);
+        $validatedData['development_program'] = Str::title($validatedData['development_program']);
+        $validatedData['review_tools']        = Str::title($validatedData['review_tools']);
+
+        $this->formatAndStoreMasterOption('competency_name', $validatedData['competency_name']);
+        $this->formatAndStoreMasterOption('development_program', $validatedData['development_program']);
+        $this->formatAndStoreMasterOption('review_tools', $validatedData['review_tools']);
+
         $idp->update($validatedData);
         return redirect()->back()->with('success', 'Development Plan updated successfully!');
     }
+
+    private function formatAndStoreMasterOption(string $type, ?string $value): void
+{
+    if (empty($value)) {
+        return;
+    }
+    
+    $formattedValue = Str::title($value);
+
+    DevelopmentPlanMaster::firstOrCreate(
+        [
+            'type' => $type,
+            'value' => $formattedValue
+        ]
+    );
+}
+
+
     public function importSingleDevelopmentPlan(Request $request)
 {
     $request->validate([

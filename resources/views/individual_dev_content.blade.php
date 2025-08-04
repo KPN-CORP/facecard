@@ -263,8 +263,10 @@
     </div>
 </div>
 @endsection
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
 <script>
 window.app = {};
@@ -324,6 +326,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     const el = form.querySelector(`[name="${key}"]`);
                     if (el) {
                         if (['time_frame_start', 'time_frame_end', 'realization_date'].includes(key) && plan[key]) {
+                            // Date Format
                             el.value = new Date(plan[key]).toISOString().split('T')[0];
                         } else {
                             el.value = plan[key];

@@ -54,7 +54,14 @@
                                 <tr><td class="label-col">Full Name</td><td class="colon-col">:</td><td class="value-col">{{ $employee->fullname }}</td></tr>
                                 <tr><td class="label-col">Date of Birth</td><td class="colon-col">:</td><td class="value-col">{{ \Carbon\Carbon::parse($employee->date_of_birth)->format('d M Y') }}</td></tr>
                                 <tr><td class="label-col">Marital Status</td><td class="colon-col">:</td><td class="value-col">{{ $employee->marital_status }}</td></tr>
-                                <tr><td class="label-col">Language Ability</td><td class="colon-col">:</td><td class="value-col">N.A.</td></tr>
+                                <tr><td class="label-col">Language Ability</td><td class="colon-col">:</td><td class="value-col"> 
+                                    @if(!empty($employee->language_ability) && is_array($employee->language_ability))
+                                    {{ implode(', ', $employee->language_ability) }}
+                                    @else
+                                    N.A.
+                                    @endif
+                                </td>
+                            </tr>
                                 <tr><td class="label-col">Gender</td><td class="colon-col">:</td><td class="value-col">{{ $employee->gender }}</td></tr>
                                 <tr><td class="label-col">Age</td><td class="colon-col">:</td><td class="value-col">{{ \Carbon\Carbon::parse($employee->date_of_birth)->age }} Year</td></tr>
                                 <tr><td class="label-col">Family Location</td><td class="colon-col">:</td><td class="value-col">{{ $employee->permanent_city ?: 'N.A.' }}</td></tr>
@@ -224,14 +231,16 @@
     </div>
 </div>
 
-{{-- Section 3: Training/Certification --}}
+{{-- Section 3 & 4: Training/Certification & Internal Movement --}}
 <div class="row g-4 mb-4">
-    <div class="col-12">
-        <div class="card shadow-sm">
+    {{-- Training/Certification Column --}}
+    <div class="col-lg-6">
+        <div class="card h-100 shadow-sm">
             <div class="card-body">
                 <h2 class="section-title">Training/Certification</h2>
                 <hr class="mt-0">
                 <div class="table-responsive">
+                    {{-- Style matched to the other tables --}}
                     <table class="table table-bordered table-hover text-center" style="font-size: 0.9rem;">
                         <thead class="table-light align-middle">
                             <tr>
@@ -252,6 +261,41 @@
                             @empty
                             <tr>
                                 <td colspan="4" class="text-center p-4">No training data.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Internal Movement Column --}}
+    <div class="col-lg-6">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h2 class="section-title">Internal Movement</h2>
+                <hr class="mt-0">
+                <div class="table-responsive">
+                    {{-- Style matched to the other tables --}}
+                    <table class="table table-bordered table-hover text-center" style="font-size: 0.9rem;">
+                        <thead class="table-light align-middle">
+                            <tr>
+                                <th>Employment Period</th>
+                                <th>Grade</th>
+                                <th>Promotion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($internalMovements as $movement)
+                            <tr>
+                                <td>{{ \Carbon\Carbon::parse($movement->from_date)->format('d M Y') }} - {{ $movement->to_date ? \Carbon\Carbon::parse($movement->to_date)->format('d M Y') : 'Present' }}</td>
+                                <td>{{ $movement->job_level }}</td>
+                                <td>{{ $movement->is_promotion }}</td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="3" class="text-center p-4">No internal movement data found.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -308,11 +352,11 @@
 
             {{-- Section 5: Competency Assessment --}}
             <div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <div class="d-flex justify-content-center">
-            <h2 class="section-title mb-0">Competency Assessment</h2>
-        </div>
-        <hr class="mt-2">
+                <div class="card-body">
+                    <div class="d-flex justify-content-center">
+                        <h2 class="section-title mb-0">Competency Assessment</h2>
+                    </div>
+                <hr class="mt-2">
 
         {{-- Row 2: Combined Controls in a single row --}}
 <div class="row g-3 align-items-end mb-4">

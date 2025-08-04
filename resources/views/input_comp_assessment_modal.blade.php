@@ -19,8 +19,8 @@
                   <input type="date" class="form-control" id="modalAssessmentDate" name="assessment_date" required>
               </div>
               <div class="col-md-6">
-                  <label for="modalMatrixGradeDisplay" class="form-label">Matrix Grade (Target)</label>
-                  <input type="text" class="form-control" id="modalMatrixGradeDisplay" readonly disabled>
+                  <label for="modalMatrixGradeDisplay" class="form-label text-muted">Matrix Grade (Target)</label>
+                  <input type="text" class="form-control bg-light text-dark" disabled value id="modalMatrixGradeDisplay" readonly disabled>
               </div>
           </div>
 

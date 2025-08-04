@@ -34,8 +34,8 @@
                                 <label for="idp_competency_type" class="form-label required-label">Competency Type</label>
                                 <select id="idp_competency_type" name="competency_type" class="form-select" required>
                                     <option value="">Please select</option>
-                                    <option value="Softskill">Soft Competency</option>
-                                    <option value="Technical">Technical Competency</option>
+                                    <option value="Soft Competency">Soft Competency</option>
+                                    <option value="Technical Competency">Technical Competency</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -121,13 +121,27 @@
                 direction: "asc"
             }
         };
-        new TomSelect("#idp_competency_name", tomSelectSettings);
-        new TomSelect("#idp_development_program", tomSelectSettings);
-        new TomSelect("#idp_review_tools", tomSelectSettings);
-    const idpForm = document.getElementById('idpForm');
-        if (idpForm) {
-            idpForm.tomselect = tomSelectInstances;
-        }
+        const competencyNameSelect = new TomSelect("#idp_competency_name", tomSelectSettings);
+        const devProgramSelect = new TomSelect("#idp_development_program", tomSelectSettings);
+        const reviewToolsSelect = new TomSelect("#idp_review_tools", tomSelectSettings);
+
+        const idpModal = document.getElementById('idpModal');
+        const idpForm = document.getElementById('idpForm');
+
+        // Dengarkan event saat modal akan ditampilkan
+        idpModal.addEventListener('show.bs.modal', function () {
+            // Perbarui tampilan Tom Select berdasarkan nilai <select> yang sudah diisi oleh openEditIdpModal
+            competencyNameSelect.setValue(idpForm.querySelector('[name="competency_name"]').value);
+            devProgramSelect.setValue(idpForm.querySelector('[name="development_program"]').value);
+            reviewToolsSelect.setValue(idpForm.querySelector('[name="review_tools"]').value);
+        });
+        
+        idpModal.addEventListener('hidden.bs.modal', function () {
+             // Kosongkan Tom Select agar siap untuk "Create" berikutnya
+            competencyNameSelect.clear();
+            devProgramSelect.clear();
+            reviewToolsSelect.clear();
+        });
     });
 
     if (window.app && typeof app.openCreateIdpModal === 'function') {

@@ -59,11 +59,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/idp/import-single', [EmployeeController::class, 'importSingleDevelopmentPlan'])->name('idp.import.single');
     Route::delete('/import/destroy-all', [ImportController::class, 'destroyAll'])->name('import.destroy_all'); 
 
-    // IDP Setting
+    // IDP Setting -- IDP Data Master
     Route::get('/idp-setting', [IdpSettingController::class, 'index'])->name('idp.setting.index');
     Route::post('/idp-setting', [IdpSettingController::class, 'store'])->name('idp.setting.store');
     Route::put('/idp-setting/{model}', [IdpSettingController::class, 'update'])->name('idp.setting.update');
     Route::delete('/idp-setting/{model}', [IdpSettingController::class, 'destroy'])->name('idp.setting.destroy');
+    Route::put('/idp-setting/master/{master}', [IdpSettingController::class, 'updateMaster'])->name('idp.setting.master.update');
+    Route::delete('/idp-setting/master/{master}', [IdpSettingController::class, 'destroyMaster'])->name('idp.setting.master.destroy');
+
     
     // Role Setting
     Route::get('admin/roles', [RoleController::class, 'index'])->name('roles.index');

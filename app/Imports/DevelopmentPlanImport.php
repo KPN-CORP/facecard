@@ -51,7 +51,7 @@ class DevelopmentPlanImport implements ToModel, WithHeadingRow, WithValidation, 
             try {
                 return Carbon::parse($dateValue);
             } catch (\Exception $e) {
-                return null; // Will be failed id the formal validation wrong
+                return null; // Will be failed if the formal validation wrong
             }
         };
 

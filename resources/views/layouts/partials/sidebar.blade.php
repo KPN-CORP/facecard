@@ -55,12 +55,16 @@
                 <i class="bi {{ $isIDPParentActive ? 'bi-chevron-up' : 'bi-chevron-right' }} arrow-icon"></i>
             </a>
             <div class="collapse submenu {{ $idpActive }}" id="idpSubMenu">
+                @can('view_idp_list')
                 <a href="{{ route('idp.list') }}" class="nav-link text-dark {{ $isIDPListActive ? 'active' : '' }}">
                     IDP List
                 </a>
+                @endcan
+                @can('view_idp_master')
                 <a href="{{ route('idp.setting.index') }}" class="nav-link text-dark {{ request()->routeIs('idp.setting.index') ? 'active' : '' }}">
-                    IDP Setting
+                    IDP Data Master
                 </a>
+                @endcan
             </div>
         </div>
         @endcan
