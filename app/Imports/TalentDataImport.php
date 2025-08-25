@@ -33,11 +33,6 @@ class TalentDataImport implements ToModel, WithHeadingRow, WithValidation, Skips
             $data['talent_box'] = $row['talent_box'];
         } elseif ($this->importType === 'talent_status') {
             $data['talent_status'] = $row['talent_status'];
-        } elseif ($this->importType === 'proposed_grade') {
-            // Note: 'proposed_grade' is in result_summaries,
-            // while 'grade' is in performance_appraisals.
-            // We'll map to 'grade' here.
-            $data['grade'] = $row['proposed_grade'];
         }
 
         if (empty($data)) {
@@ -65,7 +60,7 @@ class TalentDataImport implements ToModel, WithHeadingRow, WithValidation, Skips
     {
         // Add validation for the new 'period' column
         $rules = [
-            '*.employee_id' => 'required|string|exists:employees,employee_id',
+            '*.employee_id' => 'required|exists:employees,employee_id',
             '*.period'      => 'required|numeric|digits:4',
         ];
 
@@ -74,11 +69,16 @@ class TalentDataImport implements ToModel, WithHeadingRow, WithValidation, Skips
             $rules['*.talent_box'] = 'required|string';
         } elseif ($this->importType === 'talent_status') {
             $rules['*.talent_status'] = 'required|string';
-        } elseif ($this->importType === 'proposed_grade') {
-            $rules['*.proposed_grade'] = 'required|string';
         }
 
         return $rules;
+    }
+
+    public function customValidationMessages()
+    {
+        return [
+            '*.employee_id.exists' => 'Employee ID :input not found',
+        ];
     }
 
     public function onFailure(Failure ...$failures)

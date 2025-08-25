@@ -13,7 +13,8 @@ use App\Models\ResultSummary;
 use App\Models\MatrixGradeConfig;
 use App\Models\IndividualDevelopmentPlan;
 use App\Models\DevelopmentModel;
-use App\Models\InternalMovement;
+use App\Models\MovementTransaction; 
+use App\Models\PromotionTransaction;
 use App\Models\DevelopmentPlanMaster;
 use App\Imports\DevelopmentPlanImport;
 use App\Imports\CompetencyAssessmentImport;
@@ -45,9 +46,56 @@ public function index($employeeId = null, Request $request)
 
     $employeeId = $employee->employee_id;
 
-    $internalMovements = \App\Models\InternalMovement::where('employee_id', $employeeId)
-        ->orderBy('from_date', 'desc')
-        ->get();
+    $movements = MovementTransaction::where('employee_id', $employeeId)->get();
+    $promotions = PromotionTransaction::where('employee_id', $employeeId)->get();
+    
+    $mergedData = collect();
+
+    // 2. Proses data movement terlebih dahulu
+    foreach ($movements as $movement) {
+        $key = $movement->form . '_' . $movement->to; 
+        
+        $types = [];
+        if (strtolower($movement->is_promotion) === 'yes') $types[] = 'Promotion';
+        if (strtolower($movement->is_demotion) === 'yes') $types[] = 'Demotion';
+
+        $mergedData[$key] = (object) [
+            'period_start'  => $movement->form,
+            'period_end'    => $movement->to,
+            'business_unit' => $movement->bu_name,
+            'department'    => $movement->unit_name,
+            'position'      => $movement->designation_name,
+            'grade'         => null,
+            'type'          => implode(', ', $types) ?: 'Transfer',
+        ];
+    }
+
+    // 3. Proses data promotion dan gabungkan jika periodenya sama
+    foreach ($promotions as $promotion) {
+        $key = $promotion->form . '_' . $promotion->to;
+
+        if ($mergedData->has($key)) {
+            $mergedData[$key]->grade = $promotion->job_level;
+
+            if ($mergedData[$key]->type === 'Movement' && strtolower($promotion->is_promotion) === 'yes') {
+                 $mergedData[$key]->type = 'Promotion';
+            }
+        } 
+        else {
+            $mergedData[$key] = (object) [
+                'period_start'  => $promotion->form,
+                'period_end'    => $promotion->to,
+                'business_unit' => null,
+                'department'    => null,
+                'position'      => null,
+                'grade'         => $promotion->job_level,
+                'type'          => strtolower($promotion->is_promotion) === 'yes' ? 'Promotion' : 'N/A',
+            ];
+        }
+    }
+
+    // 4. Urutkan hasil akhir berdasarkan tanggal mulai
+    $internalMovements = $mergedData->sortByDesc('period_start');
 
     // --- Pagination IDP Data ---
     $developmentModels = DevelopmentModel::all();
@@ -58,22 +106,18 @@ public function index($employeeId = null, Request $request)
             ->orderBy('id', 'desc')
             ->paginate(5, ['*'], 'page_model_' . $model->id);
     }
-    $uncategorizedPlans = IndividualDevelopmentPlan::where('employee_id', $employeeId)
-        ->whereNull('development_model_id')
-        ->orderBy('id', 'desc')
-        ->paginate(5, ['*'], 'page_uncategorized');
     
     $allAssessments = CompetencyAssessment::where('employee_id', $employeeId)
-        ->orderBy('period', 'desc')
-        ->orderBy('updated_at', 'desc')
-        ->get();
-
+    ->orderBy('period', 'desc')
+    ->get();
     $assessmentsForJs = $allAssessments->keyBy('period');
+    $latestAssessment = $allAssessments->first();
 
-    $latestAssessment = $assessmentsForJs->first();
-    
     if ($latestAssessment) {
-        $needsRenewal = Carbon::parse($latestAssessment->updated_at)->diffInYears(now()) >= 2;
+        $lastAssessmentYear = (int) $latestAssessment->period;
+        $currentYear = now()->year;
+
+        $needsRenewal = ($currentYear - $lastAssessmentYear) >= 2;
     } else {
         $needsRenewal = true;
     }
@@ -86,10 +130,42 @@ public function index($employeeId = null, Request $request)
     $resultSummary = ResultSummary::where('employee_id', $employeeId)->first();
     
     $isIdpPaginationRequest = collect($request->keys())->some(function ($key) {
-        return str_starts_with($key, 'page_model_') || $key === 'page_uncategorized';
+        return str_starts_with($key, 'page_model_');
     });
 
+    $latestIdp = IndividualDevelopmentPlan::where('employee_id', $employeeId)
+                                          ->latest('created_at')
+                                          ->first();
+
     $activeTab = $isIdpPaginationRequest ? 'idp' : 'facecard';
+
+    $resultSummary = ResultSummary::where('employee_id', $employeeId)->first();
+    $performanceAppraisals = PerformanceAppraisal::where('employee_id', $employeeId)->get();
+    $trainings = TrainingCertification::where('employee_id', $employeeId)->get();
+
+    $timestamps = [];
+
+if ($resultSummary) {
+    $timestamps[] = $resultSummary->updated_at;
+}
+if ($performanceAppraisals->isNotEmpty()) {
+    $timestamps[] = $performanceAppraisals->max('updated_at');
+}
+if ($latestAssessment) {
+    $timestamps[] = $latestAssessment->updated_at;
+}
+if ($trainings->isNotEmpty()) {
+    $timestamps[] = $trainings->max('updated_at');
+}
+
+$validTimestamps = collect($timestamps)->filter();
+$lastUpdatedTimestamp = $validTimestamps->isNotEmpty() ? $validTimestamps->max() : null;
+
+$uniqueJobLevels = \App\Models\Employees::select('job_level')
+        ->whereNotNull('job_level')
+        ->distinct()
+        ->orderBy('job_level')
+        ->pluck('job_level');
 
     return view('index', [ 
         'employee' => $employee,
@@ -106,29 +182,30 @@ public function index($employeeId = null, Request $request)
         'needsRenewal' => $needsRenewal,
         'uniqueGradeLevels' => $uniqueGradeLevels, 
         'internalMovements' => $internalMovements,
+        'uniqueJobLevels' => $uniqueJobLevels,
 
         // IDP Variable Pagination
         'developmentModels' => $developmentModels,
         'paginatedPlans' => $paginatedPlans,
-        'uncategorizedPlans' => $uncategorizedPlans,
         'activeTab' => $activeTab,
+        'latestIdp' => $latestIdp,
+        'lastUpdatedTimestamp' => $lastUpdatedTimestamp,
     ]);
 }
 
 
     // Facecard list
     public function facecardList(Request $request)
-    {
-        $perPage = $request->input('per_page', default: 10);
-        $search = $request->input('search');
-        $query = Employees::query();
+{
+    $query = Employees::query();
+    $user = Auth::user();
 
-        $user = Auth::user();
+    if ($user && $user->isManager()) {
+        $query->where('manager_l1_id', $user->employee_id);
 
-        if ($user && $user->roles) {
+    } elseif ($user && $user->roles) {
         $role = $user->roles()->first(); 
         if ($role) {
-            // Cek dan terapkan filter hanya jika ada isinya
             if (!empty($role->business_unit) && is_array($role->business_unit)) {
                 $query->whereIn('group_company', $role->business_unit);
             }
@@ -139,40 +216,26 @@ public function index($employeeId = null, Request $request)
                 $query->whereIn('office_area', $role->location);
             }
         }
-        
+    }
+    $employees = $query->orderBy('fullname', 'asc')->get();
+
+    $pageTitle = 'Facecard'; 
+    if ($request->routeIs('idp.list')) {
+        $pageTitle = 'Individual Development Plan';
     }
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('fullname', 'like', "%{$search}%")
-                  ->orWhere('employee_id', 'like', "%{$search}%")
-                  ->orWhere('designation_name', 'like', "%{$search}%")
-                  ->orWhere('job_level', 'like', "%{$search}%")
-                  ->orWhere('group_company', 'like', "%{$search}%");
-            });
-        }
-
-        $employees = $query->orderBy('fullname', 'asc')->paginate($perPage);
-
-        $pageTitle = 'Facecard'; 
-        if ($request->routeIs('idp.list')) {
-            $pageTitle = 'Individual Development Plan';
-        }
-
-        return view('facecard_list', [
-            'pageTitle' => $pageTitle, 
-            'employees' => $employees,
-            'activePermissions' => $this->getActivePermissions()
-        ]);
-    }
-
+    return view('facecard_list', [
+        'pageTitle' => $pageTitle, 
+        'employees' => $employees,
+        'activePermissions' => $this->getActivePermissions()
+    ]);
+}
 
 
     public function idpList(Request $request)
     {
         return $this->facecardList($request);
     }
-
 
     /**
      * Save & Update Competency Assessment Data.
@@ -216,47 +279,35 @@ public function index($employeeId = null, Request $request)
      * Save & Update Result Summary Data.
      */
     public function storeResultSummary(Request $request)
-    {
-
-    $baseData = $request->validate([
+{
+    $request->validate([
         'employee_id' => 'required|string|exists:employees,employee_id',
-        'form_type'   => 'required|string',
     ]);
 
-        $dataToUpdate = [];
-        if ($request->form_type === 'details_summary') {
-            $validated = $request->validate([
-                'proposed_grade' => 'nullable|string',
-                'priority_for_development' => 'required|string',
-            ]);
-            $dataToUpdate = $validated;
+    // Hanya proses 'succession_summary', hapus blok 'details_summary'
+    $validated = $request->validate([
+        'critical_position' => 'nullable|string',
+        'successor_type' => 'nullable|string',
+        'successor_to_position' => 'nullable|string',
+    ]);
 
-        } elseif ($request->form_type === 'succession_summary') {
-            $validated = $request->validate([
-                'critical_position' => 'required|string',
-                'successor_type' => 'nullable|string',
-                'successor_to_position' => 'nullable|string',
-            ]);
-            $dataToUpdate = $validated;
-        }
+    ResultSummary::updateOrCreate(
+        ['employee_id' => $request->employee_id],
+        $validated
+    );
 
-        if (!empty($dataToUpdate)) {
-            ResultSummary::updateOrCreate(
-                ['employee_id' => $request->employee_id],
-                $dataToUpdate
-            );
-        }
-
-        return redirect()->route('employee.profile', ['employeeId' => $request->employee_id])
-                         ->with('success', 'Summary data has been saved successfully!');
-    }
+    return redirect()->route('employee.profile', ['employeeId' => $request->employee_id])
+                     ->with('success', 'Succession summary has been saved successfully!');
+}
     
-
 
     public function showIdpPage($employeeId)
 {
     $employee = \App\Models\Employees::where('employee_id', $employeeId)->firstOrFail();
     $developmentModels = \App\Models\DevelopmentModel::all();
+    $latestIdp = IndividualDevelopmentPlan::where('employee_id', $employeeId)
+                                      ->latest('created_at')
+                                      ->first();
 
     // 1. Get all unique, user-entered values from this employee's history
     $allEmployeePlans = \App\Models\IndividualDevelopmentPlan::where('employee_id', $employeeId)->get();
@@ -280,6 +331,17 @@ public function index($employeeId = null, Request $request)
     $reviewToolOptions = $masterOptions->get('review_tools', collect())->pluck('value')
         ->merge($dbReviewTools)->unique()->sort()->values();
 
+     $allDevelopmentPrograms = DevelopmentPlanMaster::where('type', 'development_program')
+        ->pluck('value')->unique()->sort()->values();
+
+    $competencyMap = DevelopmentPlanMaster::where('type', 'development_program')
+    ->whereNotNull('related_program') 
+    ->get()
+    ->groupBy('related_program')     
+    ->map(function ($group) {
+        return $group->pluck('value');
+    });
+
     // 4. Handle pagination (this logic remains the same)
     $paginatedPlans = [];
     foreach ($developmentModels as $model) {
@@ -288,20 +350,17 @@ public function index($employeeId = null, Request $request)
             ->orderBy('id', 'desc')
             ->paginate(5, ['*'], 'page_model_' . $model->id);
     }
-    $uncategorizedPlans = \App\Models\IndividualDevelopmentPlan::where('employee_id', $employeeId)
-        ->whereNull('development_model_id')
-        ->orderBy('id', 'desc')
-        ->paginate(5, ['*'], 'page_uncategorized');
 
     // 5. Return the view with the new dynamic options
     return view('individual_dev_content', [ 
         'employee' => $employee,
+        'latestIdp' => $latestIdp,
         'paginatedPlans' => $paginatedPlans,
-        'uncategorizedPlans' => $uncategorizedPlans,
         'developmentModels' => $developmentModels,
         'competencyNameOptions' => $competencyNameOptions,
-        'developmentProgramOptions' => $developmentProgramOptions,
+        'developmentProgramOptions' => $allDevelopmentPrograms,
         'reviewToolOptions' => $reviewToolOptions,
+        'competencyMap' => $competencyMap,
     ]);
 }
 
@@ -343,9 +402,8 @@ public function index($employeeId = null, Request $request)
 {
     $employeeId = $idp->employee_id;
     $modelId = $idp->development_model_id;
-    $isUncategorized = is_null($modelId);
 
-    $pageKey = $isUncategorized ? 'page_uncategorized' : 'page_model_' . $modelId;
+    $pageKey = 'page_model_' . $modelId;
 
     $previousUrl = url()->previous();
     parse_str(parse_url($previousUrl, PHP_URL_QUERY), $query);
@@ -353,13 +411,9 @@ public function index($employeeId = null, Request $request)
 
     $idp->delete();
 
-    $queryBuilder = IndividualDevelopmentPlan::where('employee_id', $employeeId);
-    if ($isUncategorized) {
-        $queryBuilder->whereNull('development_model_id');
-    } else {
-        $queryBuilder->where('development_model_id', $modelId);
-    }
-    $totalRemainingItems = $queryBuilder->count();
+   $totalRemainingItems = IndividualDevelopmentPlan::where('employee_id', $employeeId)
+                                                    ->where('development_model_id', $modelId)
+                                                    ->count();
 
     $itemsPerPage = 5; 
     $lastPage = ceil($totalRemainingItems / $itemsPerPage);
@@ -465,23 +519,28 @@ public function showReport(Request $request)
     $selectedYear = $request->input('year', now()->year);
     $searchQuery = $request->input('search');
     $perPage = $request->input('per_page', 10);
-    $filters = $request->only(['business_unit', 'job_level', 'designation', 'talent_status', 'talent_box']);
+    $filters = $request->only(['business_unit', 'job_level', 'designation', 'unit', 'talent_status', 'talent_box']);
 
     $query = Employees::query();
 
     $user = Auth::user();
     $role = $user->roles()->first(); 
 
-    if ($role) {
-        // parameter for main query
-        if (!empty($role->business_unit) && is_array($role->business_unit)) {
-            $query->whereIn('group_company', $role->business_unit);
-        }
-        if (!empty($role->company) && is_array($role->company)) {
-            $query->whereIn('company_name', $role->company);
-        }
-        if (!empty($role->location) && is_array($role->location)) {
-            $query->whereIn('office_area', $role->location);
+    if ($user && $user->isManager()) {
+        $query->where('manager_l1_id', $user->employee_id);
+
+    } elseif ($user && $user->roles) {
+        $role = $user->roles()->first(); 
+        if ($role) {
+            if (!empty($role->business_unit) && is_array($role->business_unit)) {
+                $query->whereIn('group_company', $role->business_unit);
+            }
+            if (!empty($role->company) && is_array($role->company)) {
+                $query->whereIn('company_name', $role->company);
+            }
+            if (!empty($role->location) && is_array($role->location)) {
+                $query->whereIn('office_area', $role->location);
+            }
         }
     }
 
@@ -493,6 +552,9 @@ public function showReport(Request $request)
     }
     if (!empty($filters['designation'])) {
         $query->where('designation_name', $filters['designation']);
+    }
+    if (!empty($filters['unit'])) {
+        $query->where('unit', $filters['unit']);
     }
 
     // Filter based on talent status, talent box, year
@@ -528,7 +590,7 @@ public function showReport(Request $request)
         });
     }
 
-    $employees = $query->orderBy('fullname', 'asc')->paginate($perPage);
+    $employees = $query->orderBy('fullname', 'asc')->get();
 
     foreach ($employees as $employee) {
         $appraisalForYear = $employee->performanceAppraisals->first();
@@ -571,12 +633,15 @@ public function showReport(Request $request)
         }
     }
 
+    $unitQuery = \App\Models\Employees::select('unit')->whereNotNull('unit')->distinct();
+
     $filterOptions = [
         'businessUnits' => \App\Models\Employees::select('group_company')->whereNotNull('group_company')->distinct()->orderBy('group_company')->pluck('group_company'),
         'jobLevels'     => \App\Models\Employees::select('job_level')->whereNotNull('job_level')->distinct()->orderBy('job_level')->pluck('job_level'),
         'designations'  => \App\Models\Employees::select('designation_name')->whereNotNull('designation_name')->distinct()->orderBy('designation_name')->pluck('designation_name'),
         'talentStatuses'=> \App\Models\PerformanceAppraisal::select('talent_status')->whereNotNull('talent_status')->distinct()->orderBy('talent_status')->pluck('talent_status'),
         'talentBoxes'   => \App\Models\PerformanceAppraisal::select('talent_box')->whereNotNull('talent_box')->distinct()->orderBy('talent_box')->pluck('talent_box'),
+        'units'         => $unitQuery->orderBy('unit')->pluck('unit'),
     ];
 
     return view('report', [
@@ -596,7 +661,7 @@ public function downloadReport(Request $request)
 
     // 1. Take all the filter on showReport
     $selectedYear = $request->input('year');
-    $filters = $request->only(['business_unit', 'job_level', 'designation', 'talent_status', 'talent_box']);
+    $filters = $request->only(['business_unit', 'job_level', 'designation', 'unit', 'talent_status', 'talent_box']);
     $searchQuery = $request->input('search');
     $reportType = $request->report_name;
 
@@ -607,7 +672,6 @@ public function downloadReport(Request $request)
     if ($user && $user->roles) {
         $role = $user->roles()->first(); 
         if ($role) {
-            // Terapkan batasan pada query utama
             if (!empty($role->business_unit) && is_array($role->business_unit)) {
                 $query->whereIn('group_company', $role->business_unit);
             }
@@ -629,6 +693,9 @@ public function downloadReport(Request $request)
     if (!empty($filters['designation'])) {
         $query->where('designation_name', $filters['designation']);
     }
+     if (!empty($filters['unit'])) {
+        $query->where('unit', $filters['unit']);
+    }
     if (!empty($filters['talent_status']) || !empty($filters['talent_box'])) {
         $query->whereHas('performanceAppraisals', function ($q) use ($selectedYear, $filters) {
             if ($selectedYear) {
@@ -649,7 +716,7 @@ public function downloadReport(Request $request)
         });
     }
 
-    // 3. Eager load relasi with 'year'
+    // 3. Eager load relation with 'year'
     $query->with([
         'performanceAppraisals' => fn($q) => $selectedYear ? $q->where('appraisal_year', $selectedYear) : $q->orderBy('appraisal_year', 'desc'),
         'developmentPlans' => fn($q) => $selectedYear ? $q->whereYear('time_frame_end', $selectedYear) : null,
@@ -662,7 +729,7 @@ public function downloadReport(Request $request)
         return back()->with('error', 'No data found matching your filter criteria to download.');
     }
 
-    // 5. Data Process (IMPORTANT : Before doing the export)
+    // 5. Process Data (IMPORTANT : Before doing the export)
     foreach ($employeesToExport as $employee) {
         $appraisalForYear = $employee->performanceAppraisals->first();
         $employee->talent_status_for_year = $appraisalForYear->talent_status ?? 'N/A';
@@ -681,4 +748,24 @@ public function downloadReport(Request $request)
     // 7. Send data that have been process and year to Export class
     return Excel::download(new \App\Exports\ReportExport($employeesToExport, $reportType, $selectedYear), $fileName);
 }
+public function downloadSingleIdpTemplate($employeeId)
+    {
+        // 1. Find employee data
+        $employee = Employees::where('employee_id', $employeeId)->firstOrFail();
+
+        // 2. Direct Path
+        $templatePath = public_path('templates/template_IndividualDevelopmentPlan.xlsx');
+
+        if (!file_exists($templatePath)) {
+            return redirect()->back()->with('error', 'Template file not found.');
+        }
+
+        // 3. Title Format
+        $formattedName = Str::title($employee->fullname);
+        $safeName = str_replace(' ', '_', $formattedName);
+        $dynamicFilename = 'template_IndividualDevelopmentPlan_' . $safeName . '.xlsx';
+
+
+        return response()->download($templatePath, $dynamicFilename);
+    }
 }

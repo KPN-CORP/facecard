@@ -25,6 +25,8 @@ class CompetencyAssessment extends Model
         'decision_making_score',
         'relationship_building_score',
         'developing_others_score',
+        'proposed_grade',
+        'priority_for_development'
     ];
     
  public static function getCompetencyMap(): array

@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Validators\Failure;
-use Carbon\Carbon; // Pastikan Carbon di-import
+use Carbon\Carbon; 
 
 class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure
 {
@@ -38,8 +38,12 @@ class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, Wi
                 $percentageValue = $percentageValue * 100;
             }
             $lookupKey = round($percentageValue);
-            $modelId = $this->developmentModelsMap->get($lookupKey, null);
+            $modelId = $this->developmentModelsMap->get($lookupKey);
         }
+
+         if (is_null($modelId)) {
+        return null; 
+    }
 
         // Function to parse date
         $parseDate = function($dateValue) {
@@ -77,7 +81,7 @@ class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, Wi
     {
         // validate rules
         return [
-            '*.development_model' => 'nullable', 
+            '*.development_model' => 'required|numeric', 
             '*.competency_type'   => 'required|string',
             '*.competency_name'   => 'required|string',
             '*.time_frame_start'  => 'required|numeric',

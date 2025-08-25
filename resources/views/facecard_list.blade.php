@@ -1,89 +1,81 @@
 @extends('layouts.app')
 @section('title', $pageTitle ?? 'Employee List')
 
+@push('styles')
+{{-- CSS untuk DataTables dengan tema Bootstrap 5 --}}
+<link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.css">
+
+@endpush
+
 @section('content')
 <div class="container-fluid">
-    <div class="card shadow-sm">
-        <div class="card-header bg-white py-3">
-            <h1 class="h4 mb-0" style="font-weight: 600;">{{ $pageTitle ?? 'Employee List' }}</h1>
-        </div>
-        <div class="card-body">
-            <form action="{{ request()->url() }}" method="GET" id="filterForm">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div class="d-flex align-items-center">
-                        <label for="per_page" class="form-label me-2 mb-0">Show</label>
-                        <select name="per_page" id="per_page" class="form-select form-select-sm" style="width: 75px;" onchange="this.form.submit();">
-                            <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
-                            <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
-                            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                        </select>
-                        <span class="ms-2 text-muted">entries</span>
-                    </div>
-                    
-                    {{-- Search input --}}
-                    <div class="col-md-4">
-                        <div class="input-group">
-                            <input type="search" name="search" class="form-control" placeholder="Search by name, ID, or designation..." value="{{ request('search') }}">
-                            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
-                        </div>
-                    </div>
-                </div>
-            </form>
+    <h2 class="mb-4 fw-bold text-primary">{{ $pageTitle ?? 'Employee List' }}</h2>
 
+    <div class="card shadow-sm">
+        <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-custom-header">
+                <table id="employeesTable" class="table table-hover small align-middle" style="width:100%">
+                    <thead class="table-secondary">
                         <tr>
-                            <th>No</th>
-                            <th>Employee Name</th>
-                            <th>Employee ID</th>
-                            <th>Business Unit</th>
-                            <th>Job Level</th>
-                            <th>Designation</th>
-                            <th class="text-center">Action</th>
-                        </tr>
+                            <th class="text-center align-middle">No</th>
+                            <th class="text-center align-middle">Employee ID</th>
+                            <th class="text-center align-middle">Employee Name</th>
+                            <th class="text-center align-middle">Business Unit</th>
+                            <th class="text-center align-middle">Job Grade</th>
+                            <th class="text-center align-middle">Designation</th>
+                            <th  class="text-center align-middle">Action</th> 
                     </thead>
                     <tbody>
-                        @forelse($employees as $employee)
+                        @foreach($employees as $employee)
                             <tr>
-                                <td>{{ $loop->iteration + ($employees->currentPage() - 1) * $employees->perPage() }}</td>
+                                <td class="text-center">{{ $loop->iteration }}</td>
+                                <td class="text-center">{{ $employee->employee_id }}</td>
                                 <td>{{ $employee->fullname }}</td>
-                                <td>{{ $employee->employee_id }}</td>
                                 <td>{{ $employee->group_company ?? 'N/A' }}</td>
                                 <td>{{ $employee->job_level ?? 'N/A' }}</td>
                                 <td>{{ $employee->designation_name ?? $employee->designation ?? 'N/A' }}</td>
                                 <td class="text-center">
                                     @if(request()->routeIs('idp.list'))
-                                        <a href="{{ route('idp.show', $employee->employee_id) }}" class="btn btn-danger btn-sm" title="Manage IDP">
+                                        <a href="{{ route('idp.show', $employee->employee_id) }}" class="btn btn-outline-primary btn-sm" title="Manage IDP">
                                             <i class="bi bi-journal-check"></i> Manage IDP
                                         </a>
                                     @else
-                                        <a href="{{ route('employee.profile', ['employeeId' => $employee->employee_id]) }}" class="btn btn-danger btn-sm" title="View Facecard">
-                                            View Profile
+                                        <a href="{{ route('employee.profile', ['employeeId' => $employee->employee_id]) }}" class="btn btn-outline-primary btn-sm" title="View Facecard">
+                                            View Detail
                                         </a>
                                     @endif
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center py-4">
-                                    @if(request('search'))
-                                        No employees found matching your search for "{{ request('search') }}".
-                                    @else
-                                        No employee data found.
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
-            </div>
-
-            <div class="mt-3">
-                {!! $employees->appends(request()->query())->links('vendor.pagination.custom') !!}
             </div>
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+{{-- jQuery (diperlukan oleh DataTables) --}}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+{{-- JavaScript untuk DataTables dan integrasi Bootstrap 5 --}}
+<script src="https://cdn.datatables.net/2.0.8/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.js"></script>
+
+{{-- Script untuk mengaktifkan DataTables --}}
+<script>
+$(document).ready(function() {
+    $('#employeesTable').DataTable({
+        // Opsi untuk mengatur jumlah entri per halaman
+        "lengthMenu": [ [10, 25, 50, 100], [10, 25, 50, 100] ],
+        // Jumlah entri default yang ditampilkan
+        "pageLength": 10,
+        // Menonaktifkan sorting pada kolom yang memiliki kelas 'no-sort'
+        "columnDefs": [ {
+            "targets": 'no-sort',
+            "orderable": false
+        } ]
+    });
+});
+</script>
+@endpush

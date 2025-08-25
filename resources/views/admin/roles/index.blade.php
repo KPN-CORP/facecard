@@ -7,10 +7,11 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<link rel="stylesheet" href="{{ asset('css/app.css') }}">
+
 
 
 @section('content')
-<link rel="stylesheet" href="{{ asset('css/app.css') }}">
 <div class="container-fluid">
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
@@ -93,7 +94,7 @@
                             </div>
                         </div>
                         <div class="text-end mt-4">
-                            <button type="submit" class="btn btn-danger">Create Role</button>
+                            <button type="submit" class="btn btn-primary">Create Role</button>
                         </div>
                     </form>
                 </div>
@@ -175,10 +176,10 @@
                                 </div>
                             </div>
                             <div class="d-flex justify-content-between mt-4">
-                                <button type="button" class="btn btn-outline-danger" id="deleteRoleButton">Delete Role</button>
+                                <button type="button" class="btn btn-outline-primary" id="deleteRoleButton">Delete Role</button>
                                 <div>
                                     <button type="button" class="btn btn-light" onclick="app.hideManageForm()">Cancel</button>
-                                    <button type="submit" class="btn btn-danger">Update Role</button>
+                                    <button type="submit" class="btn btn-primary">Update Role</button>
                                 </div>
                             </div>
                         </form>
@@ -298,7 +299,7 @@
                 event.preventDefault();
                 Swal.fire({
                     title: 'Create New Role?', icon: 'question', showCancelButton: true,
-                    confirmButtonColor: '#c82333', cancelButtonColor: '#6c757d',
+                    confirmButtonColor: '#AB2F2B', cancelButtonColor: '#6c757d',
                     confirmButtonText: 'Yes, Create!', cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) event.target.submit(); 
@@ -312,7 +313,7 @@
                 event.preventDefault();
                 Swal.fire({
                     title: 'Save Changes?', icon: 'question', showCancelButton: true,
-                    confirmButtonColor: '#c82333', cancelButtonColor: '#6c757d',
+                    confirmButtonColor: '#AB2F2B', cancelButtonColor: '#6c757d',
                     confirmButtonText: 'Yes, Save!', cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) event.target.submit(); 
@@ -330,7 +331,7 @@
                     title: 'Are you sure?',
                     text: `You won't be able to revert the deletion of the "${allRolesData[roleId].name}" role!`,
                     icon: 'warning', showCancelButton: true,
-                    confirmButtonColor: '#d33', cancelButtonColor: '#6c757d',
+                    confirmButtonColor: '#AB2F2B', cancelButtonColor: '#6c757d',
                     confirmButtonText: 'Yes, delete it!', cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -341,6 +342,43 @@
                 });
             });
         }
+
+        @if(session('success'))
+        Swal.fire({
+            toast: true,
+            position: 'top-end', // Muncul di pojok kanan atas
+            icon: 'success',
+            title: '{{ session('success') }}',
+            showConfirmButton: false,
+            timer: 3500, // Hilang setelah 3.5 detik
+            timerProgressBar: true
+        });
+    @endif
+    
+    // Menangkap session 'success_manage' khusus untuk halaman ini
+    @if(session('success_manage'))
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: '{{ session('success_manage') }}',
+            showConfirmButton: false,
+            timer: 3500,
+            timerProgressBar: true
+        });
+    @endif
+
+    @if(session('error'))
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: '{{ session('error') }}',
+            showConfirmButton: false,
+            timer: 5000, // Error ditampilkan sedikit lebih lama
+            timerProgressBar: true
+        });
+    @endif
     });
 </script>
 @endpush

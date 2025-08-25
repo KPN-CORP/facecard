@@ -1,9 +1,9 @@
 <?php
-// app/Imports/ProposedGradeImport.php
-
 namespace App\Imports;
 
-use App\Models\ResultSummary;
+use App\Models\CompetencyAssessment; 
+use App\Models\Employees;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
@@ -14,6 +14,12 @@ class ProposedGradeImport implements ToModel, WithHeadingRow, WithValidation, Sk
 {
     public int $successCount = 0;
     protected array $failures = [];
+    private $existingJobLevels;
+
+    public function __construct()
+    {
+        $this->existingJobLevels = Employees::whereNotNull('job_level')->pluck('job_level')->unique()->toArray();
+    }
 
     public function model(array $row)
     {
@@ -21,9 +27,14 @@ class ProposedGradeImport implements ToModel, WithHeadingRow, WithValidation, Sk
             return null;
         }
 
-        $model = ResultSummary::updateOrCreate(
-            ['employee_id' => $row['employee_id']],
-            ['proposed_grade' => $row['proposed_grade']]
+        $model = CompetencyAssessment::updateOrCreate(
+            [
+                'employee_id' => $row['employee_id'],
+                'period'      => now()->year, 
+            ],
+            [
+                'proposed_grade' => $row['proposed_grade']
+            ]
         );
 
         if ($model) {
@@ -33,11 +44,19 @@ class ProposedGradeImport implements ToModel, WithHeadingRow, WithValidation, Sk
         return $model;
     }
 
+
     public function rules(): array
     {
         return [
-            '*.employee_id' => 'required|string|exists:employees,employee_id',
-            '*.proposed_grade' => 'required|string',
+            '*.employee_id' => 'required|exists:employees,employee_id',
+            '*.proposed_grade' => ['required', 'string', Rule::in($this->existingJobLevels)],
+        ];
+    }
+
+    public function customValidationMessages()
+    {
+        return [
+            '*.employee_id.exists' => 'Employee ID :input not found',
         ];
     }
 

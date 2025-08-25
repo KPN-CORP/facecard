@@ -66,6 +66,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/idp-setting/{model}', [IdpSettingController::class, 'destroy'])->name('idp.setting.destroy');
     Route::put('/idp-setting/master/{master}', [IdpSettingController::class, 'updateMaster'])->name('idp.setting.master.update');
     Route::delete('/idp-setting/master/{master}', [IdpSettingController::class, 'destroyMaster'])->name('idp.setting.master.destroy');
+    Route::get('/employee/{employeeId}/idp-template/download', [EmployeeController::class, 'downloadSingleIdpTemplate'])
+    ->name('idp.template.download');
 
     
     // Role Setting

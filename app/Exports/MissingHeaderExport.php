@@ -48,15 +48,12 @@ class MissingHeaderExport implements FromArray, WithHeadings
                 'development_type', 'development_name', 'time_frame_start', 'time_frame_end',
                 'realization_date', 'result_evidence'
             ]);
-        
-        // --- TAMBAHAN BARU DIMULAI DI SINI ---
 
         case 'data_master':
             return array_merge($headers, [
                 'period', 'grade_level', 'synergized_team_min', 'integrity_min',
                 'growth_min', 'adaptive_min', 'passion_min', 'manage_planning_min',
-                'decision_making_min', 'relationship_building_min', 'developing_others_min',
-                'overall_status_min'
+                'decision_making_min', 'relationship_building_min', 'developing_others_min'
             ]);
 
         case 'talent_box':

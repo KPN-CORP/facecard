@@ -37,8 +37,11 @@ class DevelopmentPlanImport implements ToModel, WithHeadingRow, WithValidation, 
                 $percentageValue = $percentageValue * 100;
             }
             $lookupKey = round($percentageValue);
-            $modelId = $this->developmentModelsMap->get($lookupKey, null);
+            $modelId = $this->developmentModelsMap->get($lookupKey);
         }
+        if (is_null($modelId)) {
+        return null; 
+    }
 
         // Function to make date have to fill by date format or '-'
         $parseDate = function($dateValue) {
@@ -78,8 +81,8 @@ class DevelopmentPlanImport implements ToModel, WithHeadingRow, WithValidation, 
     public function rules(): array
     {
         return [
-            '*.employee_id'       => 'required|string|exists:employees,employee_id',
-            '*.development_model' => 'nullable',
+            '*.employee_id' => 'required|exists:employees,employee_id',
+            '*.development_model' => 'required|numeric',
             '*.competency_type'   => 'required|string',
             '*.competency_name'   => 'required|string',
             '*.time_frame_start'  => 'required|numeric',
@@ -97,6 +100,13 @@ class DevelopmentPlanImport implements ToModel, WithHeadingRow, WithValidation, 
                     $fail('The '.$attribute.' must be a valid date or "-". Empty is not allowed.');
                 },
             ],
+        ];
+    }
+
+    public function customValidationMessages()
+    {
+        return [
+            '*.employee_id.exists' => 'Employee ID :input not found',
         ];
     }
 

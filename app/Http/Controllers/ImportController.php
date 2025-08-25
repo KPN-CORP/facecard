@@ -61,7 +61,7 @@ class ImportController extends Controller
         
         if ($successCount > 0 && $failureCount > 0) {
             $errorFilePath = $this->generateErrorFile($failures, $originalPath);
-            $resultMessage = "Import completed with {$successCount} successful rows. However, {$failureCount} rows failed and were skipped.";
+            $resultMessage = "Import completed with {$successCount} successful rows. However, there were rows failed and were skipped.";
             
             ImportLog::create([
                 'data_type' => $type, 'import_date' => now(), 'result' => $resultMessage,

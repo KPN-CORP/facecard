@@ -16,7 +16,7 @@
           <div class="row mb-3">
               <div class="col-md-6">
                   <label for="modalAssessmentDate" class="form-label">Assessment Date</label>
-                  <input type="date" class="form-control" id="modalAssessmentDate" name="assessment_date" required>
+                  <input type="date" class="form-control bg-light text-dark" id="modalAssessmentDate" name="assessment_date" required>
               </div>
               <div class="col-md-6">
                   <label for="modalMatrixGradeDisplay" class="form-label text-muted">Matrix Grade (Target)</label>
@@ -27,24 +27,25 @@
           <div class="row mb-4">
             @can('input_proposed_grade')
               <div class="col-md-6">
-                  <label for="proposed_grade_modal" class="form-label">Proposed Grade</label>
-                  <select class="form-select" id="proposed_grade_modal" name="proposed_grade">
-                      <option value="" disabled>Select Proposed Grade...</option>
-                      @isset($uniqueGradeLevels)
-                        @foreach($uniqueGradeLevels as $grade)
-                            <option value="{{ $grade }}" @if(optional($resultSummary)->proposed_grade == $grade) selected @endif>{{ $grade }}</option>
-                        @endforeach
-                      @endisset
-                  </select>
-              </div>
+    <label for="proposed_grade_modal" class="form-label">Proposed Grade</label>
+    <select class="form-select" id="proposed_grade_modal" name="proposed_grade">
+        <option value="">Select Proposed Grade...</option>
+        @isset($uniqueJobLevels)
+            @foreach($uniqueJobLevels as $jobLevel)
+                <option value="{{ $jobLevel }}">{{ $jobLevel }}</option>
+            @endforeach
+        @endisset
+    </select>
+</div>
               @endcan
               @can('input_priority_dev')
               <div class="col-md-6">
                   <label for="priority_for_development_modal" class="form-label">Priority for Development</label>
                   <select class="form-select" id="priority_for_development_modal" name="priority_for_development">
-                      <option value="No" @if(optional($resultSummary)->priority_for_development == 'No') selected @endif>No</option>
-                      <option value="Yes" @if(optional($resultSummary)->priority_for_development == 'Yes') selected @endif>Yes</option>
-                  </select>
+                    <option value="" selected>Please Select...</option>
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                </select>
               </div>
               @endcan
           </div>
@@ -120,7 +121,7 @@
         
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" class="btn btn-danger">Save Assessment</button>
+          <button type="submit" class="btn btn-primary">Save Assessment</button>
         </div>
       </form>
     </div>

@@ -3,29 +3,38 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.css">
 @endpush
 
 @section('content')
-<link rel="stylesheet" href="{{ asset('css/app.css') }}">
 <div class="container-fluid">
-    
 
-    @if(session('success'))<div class="alert alert-success alert-dismissible fade show" role="alert">...</div>@endif
-    @if(session('error'))<div class="alert alert-danger alert-dismissible fade show" role="alert">...</div>@endif
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h1 class="h4 mb-0">Report</h1>
-            @if (auth()->user()->can('view_facecard_report') || auth()->user()->can('view_idp_report'))
+            <h1 class="h4 mb-0 fw-bold text-primary">Report</h1>
+            @if (auth()->user()->can('download_talent') || auth()->user()->can('download_idp_progress'))
             <div class="btn-group">
-                <button type="button" class="btn btn-outline-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-download me-1"></i> Download Report
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    @can('view_facecard_report')
+                    @can('download_talent')
                     <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); app.downloadReport('talent_report');">Talent Status & Talent Box</a></li>
                     @endcan
-                    @can('view_idp_report')
+                    @can('download_idp_progress')
                     <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); app.downloadReport('idp_progress');">IDP Progress</a></li>
                     @endcan
                 </ul>
@@ -35,31 +44,17 @@
 
         <div class="card-body">
             <form action="{{ route('report.show') }}" method="GET" id="filterReportForm">
-                <div class="row g-2 align-items-end mb-3">
-                    {{-- Show Entries --}}
+                <div class="row g-2 align-items-end mb-4">
                     <div class="col-auto">
-                        <label for="per_page" class="form-label mb-1 small">Show</label>
-                        <select name="per_page" id="per_page" class="form-select form-select-sm" onchange="this.form.submit();">
-                            <option value="10" @if(request('per_page', 10) == 10) selected @endif>10</option>
-                            <option value="25" @if(request('per_page') == 25) selected @endif>25</option>
-                            <option value="50" @if(request('per_page') == 50) selected @endif>50</option>
-                            <option value="100" @if(request('per_page') == 100) selected @endif>100</option>
-                        </select>
-                    </div>
-                    
-                    {{-- Year Filter --}}
-                    <div class="col-auto">
-                        <label for="year" class="form-label mb-1 small">Year</label>
+                        <label for="year" class="form-label mb-1 small text-muted">Year</label>
                         <select name="year" id="year" class="form-select form-select-sm" onchange="this.form.submit();">
                             @foreach($availableYears as $year)
                                 <option value="{{ $year }}" @if($selectedYear == $year) selected @endif>{{ $year }}</option>
                             @endforeach
                         </select>
                     </div>
-
-                    {{-- Business Unit Filter --}}
                     <div class="col">
-                        <label for="business_unit" class="form-label mb-1 small">Business Unit</label>
+                        <label for="business_unit" class="form-label mb-1 small text-muted">Business Unit</label>
                         <select name="business_unit" id="business_unit" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">All</option>
                             @foreach($filterOptions['businessUnits'] as $option)
@@ -67,10 +62,8 @@
                             @endforeach
                         </select>
                     </div>
-
-                    {{-- Job Level Filter --}}
                     <div class="col">
-                        <label for="job_level" class="form-label mb-1 small">Job Level</label>
+                        <label for="job_level" class="form-label mb-1 small text-muted">Job Level</label>
                         <select name="job_level" id="job_level" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">All</option>
                              @foreach($filterOptions['jobLevels'] as $option)
@@ -78,10 +71,8 @@
                             @endforeach
                         </select>
                     </div>
-
-                    {{-- Designation Filter --}}
                     <div class="col">
-                        <label for="designation" class="form-label mb-1 small">Designation</label>
+                        <label for="designation" class="form-label mb-1 small text-muted">Designation</label>
                         <select name="designation" id="designation" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">All</option>
                              @foreach($filterOptions['designations'] as $option)
@@ -89,10 +80,17 @@
                             @endforeach
                         </select>
                     </div>
-
-                    {{-- Talent Status Filter --}}
                     <div class="col">
-                        <label for="talent_status" class="form-label mb-1 small">Talent Status</label>
+        <label for="unit" class="form-label mb-1 small text-muted">Unit</label>
+        <select name="unit" id="unit" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All</option>
+            @foreach($filterOptions['units'] as $option)
+                <option value="{{ $option }}" @if(request('unit') == $option) selected @endif>{{ $option }}</option>
+            @endforeach
+        </select>
+    </div>
+                    <div class="col">
+                        <label for="talent_status" class="form-label mb-1 small text-muted">Talent Status</label>
                         <select name="talent_status" id="talent_status" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">All</option>
                              @foreach($filterOptions['talentStatuses'] as $option)
@@ -100,10 +98,8 @@
                             @endforeach
                         </select>
                     </div>
-
-                    {{-- Talent Box Filter --}}
                     <div class="col">
-                        <label for="talent_box" class="form-label mb-1 small">Talent Box</label>
+                        <label for="talent_box" class="form-label mb-1 small text-muted">Talent Box</label>
                         <select name="talent_box" id="talent_box" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">All</option>
                             @foreach($filterOptions['talentBoxes'] as $option)
@@ -111,32 +107,23 @@
                             @endforeach
                         </select>
                     </div>
-
-                    {{-- Search Box --}}
-                    <div class="col-md-3">
-                         <label for="search" class="form-label mb-1 small">Search</label>
-                         <div class="input-group">
-                             <input type="search" name="search" id="search" class="form-control form-select-sm" placeholder="Name or ID..." value="{{ request('search') }}">
-                             <button class="btn btn-outline-secondary btn-sm" type="submit"><i class="bi bi-search"></i></button>
-                         </div>
-                    </div>
                 </div>
             </form>
 
-
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-custom-header">
-                        <tr>
+                 <table id="reportTable" class="table table-hover small align-middle" style="width:100%">
+                    <thead class="table-secondary">
+                        <tr class="text-center">
                             <th>No</th>
-                            <th>Employee Name</th>
                             <th>Employee ID</th>
+                            <th>Employee Name</th>
                             <th>Business Unit</th>
                             <th>Job Level</th>
                             <th>Designation</th>
+                            <th>Unit</th>
                             @can('view_facecard_report')
                                 <th>Talent Status</th>
-                                <th>Talent Box</th>    
+                                <th>Talent Box</th>  
                             @endcan
                             @can('view_idp_report')
                                 <th>IDP Progress</th>
@@ -144,14 +131,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($employees as $employee)
+                        @foreach($employees as $employee)
                             <tr>
-                                <td>{{ $loop->iteration + ($employees->currentPage() - 1) * $employees->perPage() }}</td>
+                                <td class="text-center">{{ $loop->iteration }}</td>
+                                <td class="text-center">{{ $employee->employee_id }}</td>
                                 <td>{{ $employee->fullname }}</td>
-                                <td>{{ $employee->employee_id }}</td>
                                 <td>{{ $employee->group_company ?? 'N/A' }}</td>
                                 <td>{{ $employee->job_level ?? 'N/A' }}</td>
                                 <td>{{ $employee->designation_name ?? 'N/A' }}</td>
+                                <td>{{ $employee->unit ?? 'N/A' }}</td>
                                 @can('view_facecard_report')
                                     <td>{{ $employee->talent_status_for_year }}</td>
                                     <td>{{ $employee->talent_box_for_year }}</td>
@@ -160,31 +148,31 @@
                                     <td>{{ $employee->idp_progress }}</td>
                                 @endcan
                             </tr>
-                        @empty
-                            @php
-                                $colspan = 6;
-                                if (auth()->user()->can('view_facecard_report')) $colspan += 2;
-                                if (auth()->user()->can('view_idp_report')) $colspan += 1;
-                            @endphp
-                            <tr>
-                                <td colspan="{{ $colspan }}" class="text-center py-4">No employee data found for the selected filters.</td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
 
-            <div class="mt-3">
-                {!! $employees->appends(request()->query())->links('vendor.pagination.custom') !!}
-            </div>
+            {{-- Pagination Laravel dihapus --}}
         </div>
     </div>
 </div>
-
 @endsection
 
 @push('scripts')
+{{-- jQuery (diperlukan oleh DataTables) --}}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+{{-- JavaScript untuk DataTables dan integrasi Bootstrap 5 --}}
+<script src="https://cdn.datatables.net/2.0.8/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.js"></script>
+
 <script>
+    $(document).ready(function() {
+    $('#reportTable').DataTable({
+        "lengthMenu": [ [10, 25, 50, 100], [10, 25, 50, 100] ],
+        "pageLength": 10
+    });
+});
 if (typeof window.app === 'undefined') { window.app = {}; }
 
 app.openModal = function(modalId) {

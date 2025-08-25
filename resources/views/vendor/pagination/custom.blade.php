@@ -1,7 +1,7 @@
 @if ($paginator->hasPages())
-<link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    <div class="pagination-wrapper d-flex justify-content-between align-items-center">
-        {{-- "Showing X to Y of Z" text --}}
+    <div class="d-flex justify-content-between align-items-center">
+
+        {{-- Teks "Showing X to Y of Z" --}}
         <div class="text-muted small">
             @if($paginator->total() > 0)
                 Showing {{ $paginator->firstItem() }} to {{ $paginator->lastItem() }} of {{ $paginator->total() }} results
@@ -10,49 +10,58 @@
             @endif
         </div>
 
-        {{-- Page Links --}}
         <nav>
-            <ul class="pagination custom-pagination mb-0">
-                {{-- "Previous" --}}
+            <ul class="pagination mb-0 align-items-center">
+
+                {{-- "Previous" Button --}}
                 @if ($paginator->onFirstPage())
-                    <li class="page-item disabled" aria-disabled="true"><span class="page-link">&lsaquo;</span></li>
+                    <li class="page-item disabled">
+                        <span class="page-link border-0 bg-transparent">&lsaquo;</span>
+                    </li>
                 @else
-                    <li class="page-item"><a class="page-link" href="{{ $paginator->previousPageUrl() }}" rel="prev">&lsaquo;</a></li>
+                    <li class="page-item">
+                        <a class="page-link border-0 text-primary" href="{{ $paginator->previousPageUrl() }}" rel="prev">&lsaquo;</a>
+                    </li>
                 @endif
 
                 @php
                     $current = $paginator->currentPage();
                     $last = $paginator->lastPage();
-                    $start = 1;
-                    $end = $last;
+                    $start = max(1, $current - 1);
+                    $end = min($last, $current + 1);
 
-                    if ($last > 3) {
-                        if ($current === 1) {
-                            $start = 1;
-                            $end = 3;
-                        } elseif ($current === $last) {
-                            $start = $last - 2;
-                            $end = $last;
-                        } else {
-                            $start = $current - 1;
-                            $end = $current + 1;
-                        }
+                    if ($current === 1 && $last > 2) {
+                        $end = 3;
+                    }
+                    if ($current === $last && $last > 2) {
+                        $start = $last - 2;
                     }
                 @endphp
 
+                {{-- Page Number --}}
                 @for ($page = $start; $page <= $end; $page++)
                     @if ($page == $current)
-                        <li class="page-item active" aria-current="page"><span class="page-link">{{ $page }}</span></li>
+                        <li class="page-item mx-1" aria-current="page">
+                            <span class="d-flex align-items-center justify-content-center bg-primary text-white rounded-circle" style="width: 32px; height: 32px;">
+                                {{ $page }}
+                            </span>
+                        </li>
                     @else
-                        <li class="page-item"><a class="page-link" href="{{ $paginator->url($page) }}">{{ $page }}</a></li>
+                        <li class="page-item mx-1">
+                            <a class="page-link border-0 text-secondary" href="{{ $paginator->url($page) }}">{{ $page }}</a>
+                        </li>
                     @endif
                 @endfor
 
                 {{-- "Next" --}}
                 @if ($paginator->hasMorePages())
-                    <li class="page-item"><a class="page-link" href="{{ $paginator->nextPageUrl() }}" rel="next">&rsaquo;</a></li>
+                    <li class="page-item">
+                        <a class="page-link border-0 text-danger" href="{{ $paginator->nextPageUrl() }}" rel="next">&rsaquo;</a>
+                    </li>
                 @else
-                    <li class="page-item disabled" aria-disabled="true"><span class="page-link">&rsaquo;</span></li>
+                    <li class="page-item disabled">
+                        <span class="page-link border-0">&rsaquo;</span>
+                    </li>
                 @endif
             </ul>
         </nav>

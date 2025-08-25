@@ -28,7 +28,6 @@ class DataMasterImport implements ToModel, WithHeadingRow, WithValidation, Skips
                 'decision_making_min' => $row['decision_making_min'],
                 'relationship_building_min' => $row['relationship_building_min'],
                 'developing_others_min' => $row['developing_others_min'],
-                'overall_status_min' => $row['overall_status_min'],
             ]
         );
 
@@ -56,7 +55,6 @@ class DataMasterImport implements ToModel, WithHeadingRow, WithValidation, Skips
             '*.decision_making_min' => 'required|numeric',
             '*.relationship_building_min' => 'required|numeric',
             '*.developing_others_min' => 'required|numeric',
-            '*.overall_status_min' => 'required|string',
         ];
     }
 

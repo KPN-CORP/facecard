@@ -2,7 +2,15 @@
 
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
+:root {
+    --sidebar-width: 250px;
+            --sidebar-bg: #fff;
+            --main-bg: #f8f9fa;
+            --bs-primary-rgb: 171, 47, 43;
+            --bs-primary: #AB2F2B;
+            --bs-link-color-rgb: 171, 47, 43;
 
+}
     body {
         background-color: #f8f9fa;
         font-family: 'Inter', sans-serif; 
@@ -15,6 +23,17 @@
     .card-body {
         padding: 1.5rem;
     }
+    .table-primary {
+    --bs-table-bg: #AB2F2B;
+    --bs-table-color: #fff;
+    --bs-table-border-color: #9A2A26;
+    --bs-table-striped-bg: #B5403C;
+    --bs-table-striped-color: #fff;
+    --bs-table-active-bg: #9A2A26;
+    --bs-table-active-color: #fff;
+    --bs-table-hover-bg: #A33531;
+    --bs-table-hover-color: #fff;
+}
    
     .table-summary {
         font-size: 14px; 
@@ -42,7 +61,7 @@
     }
 
     .section-title {
-        color: #c82333;
+        color: #AB2F2B;
         font-weight: 600;
         text-align: center;
         margin-bottom: 1rem;
@@ -80,7 +99,7 @@
     }
     .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
         color: #fff;
-        background-color: #c82333; 
+        background-color: #AB2F2B; 
     }
 
     .btn-back {
@@ -91,6 +110,34 @@
     .btn-back:hover {
         color: #212529;
     }
+
+    .btn-outline-primary {
+    --bs-btn-color: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--bs-primary);
+    --bs-btn-hover-border-color: var(--bs-primary);
+    --bs-btn-active-bg: var(--bs-primary);
+    --bs-btn-active-border-color: var(--bs-primary);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+    
+    /* Warna teks saat di-hover (putih) */
+    --bs-btn-hover-color: #fff; 
+    /* Warna teks saat aktif (putih) */
+    --bs-btn-active-color: #fff;
+}
+
+.btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #AB2F2B; /* Warna merah sedikit lebih gelap untuk hover */
+    --bs-btn-hover-border-color: #AB2F2B;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #AB2F2B; /* Warna merah lebih gelap lagi saat ditekan */
+    --bs-btn-active-border-color: #AB2F2B;
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+}
 
     .table-custom-header th {
     background-color: #F9FAFB;
@@ -116,7 +163,7 @@ html, body {
 }
 
 .permissions-nav .nav-link.active {
-        background-color: #c82333 !important;
+        background-color: #AB2F2B !important;
         color: white !important;
     }
     .permissions-nav .nav-link {
@@ -133,8 +180,8 @@ html, body {
         overflow: hidden;
     }
     .form-check-input:checked {
-        background-color: #c82333;
-        border-color: #c82333;
+        background-color: #AB2F2B;
+        border-color: #AB2F2B;
     }
     .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
         background-color: #f0f0f0;
@@ -148,8 +195,8 @@ html, body {
     .main-menu .nav-link:focus,
     .main-menu .nav-link:hover,
     .main-menu .nav-link:active {
-        --bs-nav-link-color: #c82333 !important;
-        --bs-nav-link-hover-color: #c82333 !important;
+        --bs-nav-link-color: #AB2F2B !important;
+        --bs-nav-link-hover-color: #AB2F2B !important;
         color: #121212 !important;
         background-color: transparent !important;
     }
@@ -157,7 +204,7 @@ html, body {
     /* Parent item aktif */
     .main-menu .nav-link.custom-active {
         background-color: rgba(248, 215, 218, 0.5) !important;
-        color: #c82333 !important;
+        color: #AB2F2B !important;
         border-radius: 6px;
         font-weight: 200;
     }
@@ -165,7 +212,7 @@ html, body {
     /* Submenu aktif */
     .main-menu .nav-link.sub-active {
         background-color: rgba(197, 171, 174, 0.5) !important;
-        color: #c82333 !important;
+        color: #AB2F2B !important;
         border-radius: 8px;
         font-weight: 500;
     }
@@ -184,9 +231,9 @@ html, body {
     }
 
     /* Reset default Bootstrap .text-primary & .active */
-    .text-primary,
+    
     .main-menu .nav-link.active {
-        color: #c82333 !important;
+        color: #AB2F2B !important;
         border-radius: 8px;
         font-weight: 200;
     }
@@ -219,7 +266,7 @@ html, body {
     }
 
     .custom-pagination .page-item.active .page-link {
-        background-color: #c82333; 
+        background-color: #AB2F2B; 
         color: white;
         font-weight: bold;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -232,6 +279,39 @@ html, body {
     .custom-pagination .page-item:not(.active) .page-link:hover {
         background-color: #f1f1f1;
     }
+
+    .pagination {
+    --bs-pagination-focus-box-shadow: none; 
+}
+
+/* Mengatur semua link (angka dan panah) */
+.pagination .page-link {
+    border: none;
+    background-color: transparent;
+    color: #6c757d; 
+    border-radius: 50% !important;
+    margin: 0 4px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.pagination .page-item:not(.disabled) .page-link {
+    color: #AB2F2B; 
+}
+
+.pagination .page-item:not(.active):not(.disabled) .page-link:hover {
+    background-color: #fce8e6; 
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #AB2F2B; 
+    color: white;
+    font-weight: bold;
+}
 
 
 

@@ -17,6 +17,7 @@
                         <div class="col-md-12 mb-3">
                             <label for="modal_critical_position" class="form-label">Critical Position</label>
                             <select name="critical_position" id="modal_critical_position" class="form-select">
+                                <option value="">Please select...</option>
                                 <option value="No" @if(optional($resultSummary)->critical_position == 'No') selected @endif>No</option>
                                 <option value="Yes" @if(optional($resultSummary)->critical_position == 'Yes') selected @endif>Yes</option>
                             </select>
@@ -45,7 +46,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-danger">Save Changes</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>

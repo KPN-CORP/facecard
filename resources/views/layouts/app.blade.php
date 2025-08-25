@@ -6,6 +6,7 @@
     <title>@yield('title', 'HC System')</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
@@ -17,6 +18,9 @@
             --sidebar-width: 250px;
             --sidebar-bg: #fff;
             --main-bg: #f8f9fa;
+            --bs-primary-rgb: 171, 47, 43;
+            --bs-primary: #AB2F2B;
+            --bs-link-color-rgb: 171, 47, 43;
         }
         body {
             background-color: var(--main-bg);

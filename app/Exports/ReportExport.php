@@ -30,7 +30,7 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping, ShouldA
     {
         $baseHeadings = [
             'Employee Name', 'Employee ID', 'Business Unit',
-            'Job Level', 'Designation',
+            'Job Level', 'Designation', 'Unit'
         ];
 
         if ($this->reportType === 'talent_report') {
@@ -52,6 +52,7 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             $employee->group_company,
             $employee->job_level,
             $employee->designation_name,
+            $employee->unit,
         ];
 
         if ($this->reportType === 'talent_report') {

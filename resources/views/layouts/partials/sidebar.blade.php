@@ -48,18 +48,15 @@
             $isIDPListActive = request()->routeIs('idp.list') || request()->routeIs('idp.show');
         @endphp
 
-        @can('view_idp_report')
         <div>
             <a href="#idpSubMenu" class="nav-link d-flex justify-content-between align-items-center {{ $isIDPParentActive ? 'custom-active' : 'text-dark' }}" data-bs-toggle="collapse" role="button" aria-expanded="{{ $isIDPParentActive ? 'true' : 'false' }}" aria-controls="idpSubMenu">
                 <span><i class="bi bi-journal-check me-2"></i> IDP</span>
                 <i class="bi {{ $isIDPParentActive ? 'bi-chevron-up' : 'bi-chevron-right' }} arrow-icon"></i>
             </a>
             <div class="collapse submenu {{ $idpActive }}" id="idpSubMenu">
-                @can('view_idp_list')
                 <a href="{{ route('idp.list') }}" class="nav-link text-dark {{ $isIDPListActive ? 'active' : '' }}">
                     IDP List
                 </a>
-                @endcan
                 @can('view_idp_master')
                 <a href="{{ route('idp.setting.index') }}" class="nav-link text-dark {{ request()->routeIs('idp.setting.index') ? 'active' : '' }}">
                     IDP Data Master
@@ -67,7 +64,6 @@
                 @endcan
             </div>
         </div>
-        @endcan
 
         {{-- Report --}}
         @can('view_report_menu')
@@ -109,7 +105,7 @@
     <div class="mt-auto">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+            <button type="submit" class="btn btn-outline-primary w-100">Logout</button>
         </form>
     </div>
 </aside>

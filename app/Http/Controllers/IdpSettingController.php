@@ -7,12 +7,13 @@ use App\Models\DevelopmentModel;
 use App\Models\IndividualDevelopmentPlan;
 use App\Models\DevelopmentPlanMaster;
 use Illuminate\Support\Facades\DB;
+use App\Rules\SumPercentageCheck;
 
 class IdpSettingController extends Controller
 {
      public function index(Request $request)
     {
-        $modelPerPage = $request->input('model_per_page', 10);
+    $modelPerPage = $request->input('model_per_page', 10);
     $modelsQuery = DevelopmentModel::query();
     if ($request->filled('model_search')) {
         $modelsQuery->where('name', 'like', '%' . $request->input('model_search') . '%');
@@ -46,6 +47,7 @@ class IdpSettingController extends Controller
     $reviewTools = $rtQuery->orderBy('value', 'asc')->paginate($rtPerPage, ['*'], 'rt_page');
 
     // Get ALL master data for the modal's dropdown
+    $allModelsForModal = DevelopmentModel::orderBy('name')->get();
     $allMasterDataForModal = DevelopmentPlanMaster::all()->groupBy('type');
     
     $activeTab = 'pills-dev-model'; // Default tab
@@ -59,6 +61,7 @@ class IdpSettingController extends Controller
 
     return view('idp_setting', [
         'models' => $models,
+        'allModelsForModal' => $allModelsForModal,
         'competencyNames' => $competencyNames,
         'developmentPrograms' => $developmentPrograms,
         'reviewTools' => $reviewTools,
@@ -70,7 +73,7 @@ class IdpSettingController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:development_models,name',
-            'percentage' => 'required|integer|min:10|max:100',
+            'percentage' => ['required', 'integer', 'min:1', new SumPercentageCheck()],
         ]);
 
         DevelopmentModel::create($validated);
@@ -82,25 +85,35 @@ class IdpSettingController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:development_models,name,' . $model->id,
-            'percentage' => 'required|integer|min:10|max:100',
+            'percentage' => ['required', 'integer', 'min:1', new SumPercentageCheck($model->id)],
+            'replace_with' => 'nullable|integer|exists:development_models,id',
         ]);
 
-        $model->update($validated);
+        if ($request->filled('replace_with')) {
+            $replacementModel = DevelopmentModel::find($validated['replace_with']);
+            
+            IndividualDevelopmentPlan::where('development_model_id', $model->id)
+                ->update(['development_model_id' => $replacementModel->id]);
+            
+            $model->delete();
+            
+            return redirect()->route('idp.setting.index')->with('success', "'{$model->name}' has been successfully replaced with '{$replacementModel->name}'.");
+        }
 
+        $model->update($validated);
         return redirect()->route('idp.setting.index')->with('success', 'Development Model updated successfully.');
     }
-
     public function destroy(Request $request, DevelopmentModel $model)
     {
-        $currentPage = $request->input('model_page', 1);
-        $model->delete();
-        
-        $totalItems = DevelopmentModel::count();
-        $itemsPerPage = 10;
-        $lastPage = ceil($totalItems / $itemsPerPage) ?: 1;
-        $targetPage = ($currentPage > $lastPage) ? $lastPage : $currentPage;
+        $relatedPlansCount = IndividualDevelopmentPlan::where('development_model_id', $model->id)->count();
 
-        return redirect()->route('idp.setting.index', ['model_page' => $targetPage])
+        if ($relatedPlansCount > 0) {
+            return redirect()->back()
+                ->with('error', "Cannot delete '{$model->name}' because it is associated with {$relatedPlansCount} development plan(s). Please edit and replace it first.");
+        }
+
+        $model->delete();
+        return redirect()->route('idp.setting.index', ['model_page' => $request->input('model_page', 1)])
                          ->with('success', 'Development Model has been deleted.');
     }
 
@@ -134,7 +147,14 @@ class IdpSettingController extends Controller
 
 public function destroyMaster(DevelopmentPlanMaster $master)
 {
+    $relatedPlansCount = IndividualDevelopmentPlan::where($master->type, $master->value)->count();
+    if ($relatedPlansCount > 0) {
+        return redirect()->back()
+            ->with('error', "Cannot delete '{$master->value}' because it is associated with {$relatedPlansCount} development plan(s). Please edit and replace it first.");
+    }
+
     $master->delete();
+    
     return redirect()->back()->with('success', 'Master data deleted successfully.');
 }
 }

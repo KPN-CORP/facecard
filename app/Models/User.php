@@ -29,4 +29,14 @@ class User extends Authenticatable
             $query->where('name', $permissionName);
         })->exists();
     }
+    public function isManager(): bool
+    {
+        // Jika user tidak punya employee_id, dia bukan manajer.
+        if (!$this->employee_id) {
+            return false;
+        }
+        // Cek ke tabel employees, jika ada minimal 1 karyawan
+        // yang manager_l1_id-nya adalah employee_id user ini, maka dia manajer.
+        return Employees::where('manager_l1_id', $this->employee_id)->exists();
+    }
 }
