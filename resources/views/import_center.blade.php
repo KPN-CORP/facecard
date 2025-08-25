@@ -107,53 +107,56 @@
 
                     {{-- Instruction --}}
                     <div id="competency-assessment-instructions" class="alert alert-info mt-3 d-none" role="alert">
-                        <h4 class="alert-heading h6">Pastikan format file Excel Anda sesuai :</h4>
+                        <h4 class="alert-heading h6">Please ensure your Excel file format is correct:</h4>
                         <ul class="mb-0 small" style="padding-left: 1.2rem;">
-                            <li>Kolom 'employee_id' yang diawali '0' harus diberi tanda petik satu (contoh: `'012345`).</li>
-                            <li>Format tanggal untuk 'assessment_date' adalah (YYYY-MM-DD).</li>
-                            <li>Jika tidak ada nilai untuk competency score, isi dengan angka 0.</li>
+                            <li>For 'employee_id' columns that start with '0', a single quote must be added before the number (example: `'012345`).</li>
+                            <li>The date format for 'assessment_date' is (YYYY-MM-DD).</li>
+                            <li>If there is no value for the competency score, please fill it with the number 0.</li>
                         </ul>
                     </div>
 
                      <div id="data-master-instructions" class="alert alert-info mt-3 d-none" role="alert">
-                        <h4 class="alert-heading h6">Pastikan format file Excel Anda sesuai :</h4>
+                        <h4 class="alert-heading h6">Please ensure your Excel file format is correct:</h4>
                         <ul class="mb-0 small" style="padding-left: 1.2rem;">
-                            <li>Format 'period' adalah tahun (YYYY).</li>
-                            <li>'matrix_grade' diisi dengan huruf kapital "(2A)"</li>
+                            <li>The format for 'period' is the year (YYYY).</li>
+                            <li>'matrix_grade' must be filled with capital letters "(2A)".</li>
                         </ul>
                     </div>
 
                      <div id="idp-instructions" class="alert alert-info mt-3 d-none" role="alert">
-                        <h4 class="alert-heading h6">Pastikan format file Excel Anda sesuai :</h4>
+                        <h4 class="alert-heading h6">Please ensure your Excel file format is correct:</h4>
                         <ul class="mb-0 small" style="padding-left: 1.2rem;">
-                            <li>Kolom 'employee_id' yang diawali '0' harus diberi tanda petik satu (contoh: `'012345`).</li>
-                            <li>Format tanggal untuk 'assessment_date' adalah (DD-MM-YYYY).</li>
-                            <li>Jika tidak ada nilai untuk 'realization_date', isi dengan '-'.</li>
+                            <li>Please fill out your Individual Development Plan (IDP) in the "IDP" sheet.</li>
+                            <li>The "Master" sheet is for reference only and contains the dropdown options for 'competency_name' and 'development_program'.</li>
+                            <li>Ensure all data is entered according to the provided template.</li>
+                            <li>For 'employee_id' columns that start with '0', a single quote must be added before the number (example: `'012345`).</li>
+                            <li>The date format for 'assessment_date' is (DD-MM-YYYY).</li>
+                            <li>If there is no value for 'realization_date', please fill it with '-'.</li>
                         </ul>
                     </div>
 
                     <div id="talent-instructions" class="alert alert-info mt-3 d-none" role="alert">
-                        <h4 class="alert-heading h6">Pastikan format file Excel Anda sesuai :</h4>
+                        <h4 class="alert-heading h6">Please ensure your Excel file format is correct:</h4>
                         <ul class="mb-0 small" style="padding-left: 1.2rem;">
-                            <li>Kolom 'employee_id' yang diawali '0' harus diberi tanda petik satu (contoh: `'012345`).</li>
-                            <li>Format 'period' adalah tahun (YYYY).</li>
+                            <li>For 'employee_id' columns that start with '0', a single quote must be added before the number (example: `'012345`).</li>
+                            <li>The format for 'period' is the year (YYYY).</li>
                         </ul>
                     </div>
 
                     <div id="proposed-instructions" class="alert alert-info mt-3 d-none" role="alert">
-                        <h4 class="alert-heading h6">Pastikan format file Excel Anda sesuai :</h4>
+                        <h4 class="alert-heading h6">Please ensure your Excel file format is correct:</h4>
                         <ul class="mb-0 small" style="padding-left: 1.2rem;">
-                            <li>Kolom 'employee_id' yang diawali '0' harus diberi tanda petik satu (contoh: `'012345`).</li>
-                            <li>Proposed Grade diisi dengan huruf kapital "(2A)"</li>
+                            <li>For 'employee_id' columns that start with '0', a single quote must be added before the number (example: `'012345`).</li>
+                            <li>The Proposed Grade must be filled with capital letters "(2A)".</li>
                         </ul>
                     </div>
 
                     <div id="internal-instructions" class="alert alert-info mt-3 d-none" role="alert">
-                        <h4 class="alert-heading h6">Pastikan format file Excel Anda sesuai :</h4>
+                        <h4 class="alert-heading h6">Please ensure your Excel file format is correct:</h4>
                         <ul class="mb-0 small" style="padding-left: 1.2rem;">
-                            <li>Kolom 'employee_id' yang diawali '0' harus diberi tanda petik satu (contoh: `'012345`).</li>
-                            <li>Format tanggal untuk 'from_date' dan 'to_date' adalah (DD-MM-YYYY).</li>
-                            <li>Job Grade diisi dengan huruf kapital "(2A)"</li>
+                            <li>For 'employee_id' columns that start with '0', a single quote must be added before the number (example: `'012345`).</li>
+                            <li>The date format for 'from_date' and 'to_date' is (DD-MM-YYYY).</li>
+                            <li>The Job Grade must be filled with capital letters "(2A)".</li>
                         </ul>
                     </div>
                     

@@ -28,8 +28,11 @@
                     <div class="alert alert-info mt-3" role="alert">
                         <h4 class="alert-heading h6">Pastikan format file Excel Anda sesuai:</h4>
                             <ul class="mb-0 small" style="padding-left: 1.2rem;">
-                                <li>Format "time_frame_start", "time_frame_end", dan "realization_date" adalah (DD-MM-YYYY) atau format angka Excel.</li>
-                                <li>Jika "realization_date" kosong, isi dengan tanda strip (`-`).</li>
+                                <li>Please fill out your Individual Development Plan (IDP) in the "IDP" sheet.</li>
+                                <li>The "Master" sheet is for reference only and contains the dropdown options for 'competency_name' and 'development_program'.</li>
+                                <li>Ensure all data is entered according to the provided template.</li>
+                                <li>The date format for "time_frame_start", "time_frame_end", and "realization_date" must be (DD-MM-YYYY). The dates entered cannot be after the current date.</li>
+                                <li>If the "realization_date" has not yet occurred or is not applicable, please leave it blank, and it will be automatically filled with a dash(`-`).</li>
                             </ul>
                         </div>
                 </div>

@@ -27,66 +27,87 @@ class ImportController extends Controller
     }
 
     public function processImport(Request $request)
-    {
-        $request->validate([
-            'import_type' => 'required|string',
-            'import_file' => 'required|file|mimes:xlsx,xls'
-        ]);
+{
+    $request->validate([
+        'import_type' => 'required|string',
+        'import_file' => 'required|file|mimes:xlsx,xls'
+    ]);
 
-        $type = $request->import_type;
-        $file = $request->file('import_file');
-        $originalPath = $file->store('imports/original');
+    $type = $request->import_type;
+    $file = $request->file('import_file');
+    $originalPath = $file->store('imports/original');
 
-        try {
-            $importer = $this->getImporter($type);
-        } catch (\Exception $e) {
-            Storage::delete($originalPath);
-            return back()->with('error', $e->getMessage());
+    try {
+        $importer = $this->getImporter($type);
+    } catch (\Exception $e) {
+        Storage::delete($originalPath);
+        return back()->with('error', $e->getMessage());
+    }
+
+    try {
+        Excel::import($importer, $originalPath);
+    } catch (\Exception $e) {
+        return $this->handleFatalImportError($e, $type, $originalPath);
+    }
+
+    // --- BAGIAN REVISI DIMULAI DI SINI ---
+
+    $failures = [];
+    $successCount = 0;
+
+    // Cek apakah ini adalah importer IDP yang menggunakan multi-sheet
+    if ($importer instanceof \App\Imports\DevelopmentPlanImport) {
+        // Jika ya, ambil hasil dari sub-importer yang spesifik untuk sheet "IDP"
+        if (isset($importer->idpSheetImport)) {
+            $sheetImporter = $importer->idpSheetImport;
+            $failures = $sheetImporter->failures();
+            $successCount = $sheetImporter->successCount;
         }
-
-        try {
-            Excel::import($importer, $originalPath);
-        } catch (\Exception $e) {
-            return $this->handleFatalImportError($e, $type, $originalPath);
-        }
-
+    } else {
+        // Jika bukan, gunakan logika lama untuk importer single-sheet lainnya
         $failures = method_exists($importer, 'failures') ? $importer->failures() : [];
         $successCount = property_exists($importer, 'successCount') ? $importer->successCount : 0;
-        $failureCount = count($failures);
-
-        if ($successCount === 0 && $failureCount > 0) {
-            $this->handleImportFailureLog($failures, $type, $originalPath);
-            return redirect()->back()->with('error', "Import failed. All {$failureCount} rows had errors. Please check the downloaded report.");
-        }
-        
-        if ($successCount > 0 && $failureCount > 0) {
-            $errorFilePath = $this->generateErrorFile($failures, $originalPath);
-            $resultMessage = "Import completed with {$successCount} successful rows. However, there were rows failed and were skipped.";
-            
-            ImportLog::create([
-                'data_type' => $type, 'import_date' => now(), 'result' => $resultMessage,
-                'status' => 'Success', 
-                'original_file_path' => $originalPath, 'error_file_path' => $errorFilePath,
-                'user_id' => auth()->id(),
-            ]);
-
-            return redirect()->route('import.index')->with('success', $resultMessage);
-        }
-
-        if ($successCount > 0 && $failureCount === 0) {
-            $resultMessage = ucfirst(str_replace('_', ' ', $type)) . " data ({$successCount} rows) imported successfully.";
-            ImportLog::create([
-                'data_type' => $type, 'import_date' => now(), 'result' => $resultMessage,
-                'status' => 'Success', 'original_file_path' => $originalPath,
-                'user_id' => auth()->id(),
-            ]);
-
-            return redirect()->route('import.index')->with('success', $resultMessage);
-        }
-
-        Storage::delete($originalPath);
-        return redirect()->back()->with('error', 'No valid data was found in the file to import.');
     }
+
+    $failureCount = count($failures);
+
+    // --- BAGIAN REVISI SELESAI ---
+
+
+    // Sisa kode di bawah ini tidak berubah dan akan berfungsi dengan benar
+    if ($successCount === 0 && $failureCount > 0) {
+        $this->handleImportFailureLog($failures, $type, $originalPath);
+        return redirect()->back()->with('error', "Import failed. All {$failureCount} rows had errors. Please check the downloaded report.");
+    }
+    
+    if ($successCount > 0 && $failureCount > 0) {
+        $errorFilePath = $this->generateErrorFile($failures, $originalPath);
+        $resultMessage = "Import completed with {$successCount} successful rows. However, there were rows failed and were skipped.";
+        
+        ImportLog::create([
+            'data_type' => $type, 'import_date' => now(), 'result' => $resultMessage,
+            'status' => 'Success', 
+            'original_file_path' => $originalPath, 'error_file_path' => $errorFilePath,
+            'user_id' => auth()->id(),
+        ]);
+
+        return redirect()->route('import.index')->with('success', $resultMessage);
+    }
+
+    if ($successCount > 0 && $failureCount === 0) {
+        $resultMessage = ucfirst(str_replace('_', ' ', $type)) . " data ({$successCount} rows) imported successfully.";
+        ImportLog::create([
+            'data_type' => $type, 'import_date' => now(), 'result' => $resultMessage,
+            'status' => 'Success', 'original_file_path' => $originalPath,
+            'user_id' => auth()->id(),
+        ]);
+
+        return redirect()->route('import.index')->with('success', $resultMessage);
+    }
+
+    Storage::delete($originalPath);
+    return redirect()->back()->with('error', 'No valid data was found in the file to import.');
+}
 
     public function downloadImportFile(ImportLog $log)
     {

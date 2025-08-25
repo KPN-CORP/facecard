@@ -11,30 +11,22 @@ use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Validators\Failure;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
-use Carbon\Carbon; 
+use Carbon\Carbon;
 
-class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure, SkipsEmptyRows
+class IdpSheetImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure, SkipsEmptyRows
 {
-    protected string $employee_id;
+    protected array $failures = [];
     private $developmentModelsMap;
-    public array $failures = [];
     public int $successCount = 0;
 
-    public function __construct(string $employee_id)
+    public function __construct()
     {
-        $this->employee_id = $employee_id;
         $this->developmentModelsMap = DevelopmentModel::all()->pluck('id', 'percentage');
     }
 
     public function model(array $row)
     {
-        // Lewati baris jika kolom kunci kosong
-        if (empty($row['competency_type']) || empty($row['development_model'])) {
-            return null;
-        }
-        
-        // Logika untuk mengekstrak angka dari 'development_model'
-        $modelId = null; 
+        $modelId = null;
         if (isset($row['development_model'])) {
             preg_match('/^\d+/', (string) $row['development_model'], $matches);
             if (!empty($matches)) {
@@ -43,12 +35,10 @@ class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, Wi
             }
         }
 
-        // Lewati baris jika model tidak ditemukan di database
-        if (is_null($modelId)) {
-            return null; 
+        if (empty($row['employee_id']) || is_null($modelId)) {
+            return null;
         }
-
-        // Fungsi untuk parsing tanggal dengan format DD-MM-YYYY
+        
         $parseDate = function($dateValue) {
             if (empty($dateValue) || $dateValue === '-') {
                 return null;
@@ -59,16 +49,16 @@ class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, Wi
             try {
                 return Carbon::createFromFormat('d-m-Y', $dateValue);
             } catch (\Exception $e) {
-                return null; 
+                return null;
             }
         };
 
         $this->successCount++;
 
         return new IndividualDevelopmentPlan([
-            'employee_id'          => $this->employee_id, // Gunakan ID dari constructor
-            'development_model_id' => $modelId, 
-            'competency_type'      => $row['competency_type'],
+            'employee_id'          => $row['employee_id'],
+            'development_model_id' => $modelId,
+            'competency_type'      => $row['competency_type'], 
             'competency_name'      => $row['competency_name'],
             'review_tools'         => $row['review_tools'],
             'development_program'  => $row['development_program'],
@@ -83,13 +73,11 @@ class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, Wi
     public function rules(): array
     {
         return [
-            // Aturan untuk melarang keberadaan kolom 'employee_id'
-            '*.employee_id'       => 'prohibited',
-
-            // Aturan validasi lain disamakan dengan importer sebelumnya
+            '*.employee_id'       => 'required|exists:employees,employee_id',
             '*.development_model' => 'required|string',
             '*.competency_type'   => 'required|string',
             '*.competency_name'   => 'required|string',
+            // --- ATURAN VALIDASI TANGGAL DIPERBARUI ---
             '*.time_frame_start'  => ['required', 'date_format:d-m-Y', 'before_or_equal:today'],
             '*.time_frame_end'    => ['required', 'date_format:d-m-Y', 'before_or_equal:today'],
             '*.realization_date'  => [
@@ -99,14 +87,11 @@ class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, Wi
             ],
         ];
     }
-
+    
     public function customValidationMessages()
     {
         return [
-            // Pesan error kustom untuk aturan 'prohibited'
-            '*.employee_id.prohibited' => 'The employee_id column is not necessary and should be removed from the template.',
-            
-            // Pesan error kustom untuk validasi tanggal
+            '*.employee_id.exists' => 'Employee ID :input not found',
             '*.date_format' => 'The :attribute must match the format DD-MM-YYYY.',
             '*.before_or_equal' => 'The :attribute must be a date before or equal to today.',
         ];
