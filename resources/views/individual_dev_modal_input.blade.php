@@ -83,14 +83,14 @@
             <div class="col-md-12">
                 <label for="idp_time_frame_start" class="form-label">Time Frame <span class="text-danger">*</span></label>
                 <div class="input-group">
-                    <input type="date" id="idp_time_frame_start" name="time_frame_start" class="form-control" required>
+                    <input type="date" id="idp_time_frame_start" name="time_frame_start" class="form-control" required max="{{ date('Y-m-d') }}">
                     <span class="input-group-text">→</span>
-                    <input type="date" id="idp_time_frame_end" name="time_frame_end" class="form-control" required>
+                    <input type="date" id="idp_time_frame_end" name="time_frame_end" class="form-control" required max="{{ date('Y-m-d') }}">
                 </div>
             </div>
             <div class="col-md-6">
                 <label for="idp_realization_date" class="form-label">Realization Date</label>
-                <input type="date" id="idp_realization_date" name="realization_date" class="form-control">
+                <input type="date" id="idp_realization_date" name="realization_date" class="form-control" max="{{ date('Y-m-d') }}">
             </div>
             <div class="col-md-6">
                 <label for="idp_result_evidence" class="form-label">Result Evidence</label>

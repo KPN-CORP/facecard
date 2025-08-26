@@ -71,6 +71,16 @@ class RoleController extends Controller
         'permissions' => 'nullable|array',
     ]);
 
+    if (!empty($validated['employee_ids'])) {
+            $assignedUsers = User::whereIn('employee_id', $validated['employee_ids'])->whereHas('roles')->with('roles', 'employee')->get();
+            if ($assignedUsers->isNotEmpty()) {
+                $errorMessages = $assignedUsers->map(function ($user) {
+                    return $user->employee->fullname . ' (already in role: ' . $user->roles->pluck('name')->join(', ') . ')';
+                })->join('; ');
+                return redirect()->back()->withInput()->with('error', 'Action failed. Users already assigned to roles: ' . $errorMessages);
+            }
+        }
+
     $role = Role::create([
         'name' => $validated['role_name'],
         'business_unit' => $validated['business_unit'] ?? null,
