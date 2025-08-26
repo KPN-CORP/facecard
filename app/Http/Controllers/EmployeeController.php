@@ -383,18 +383,29 @@ $uniqueJobLevels = \App\Models\Employees::select('job_level')
             'result_evidence' => 'nullable|string',
         ]);
 
-        $validatedData['competency_name']     = Str::title($validatedData['competency_name']);
-        $validatedData['development_program'] = Str::title($validatedData['development_program']);
-        $validatedData['review_tools']        = Str::title($validatedData['review_tools']);
+        $validatedData['competency_name'] = $this->getFormattedMasterValue(
+        'competency_name', $validatedData['competency_name']
+    );
 
-        $this->formatAndStoreMasterOption('competency_name', $validatedData['competency_name']);
-        $this->formatAndStoreMasterOption('development_program', $validatedData['development_program']);
-        $this->formatAndStoreMasterOption('review_tools', $validatedData['review_tools']);
-    
-        IndividualDevelopmentPlan::create($validatedData);
-        return redirect()->back()->with('success', 'Development Plan added successfully!');
+    $validatedData['development_program'] = $this->getFormattedMasterValue(
+        'development_program', $validatedData['development_program']
+    );
+
+    if (!empty($validatedData['review_tools'])) {
+        $validatedData['review_tools'] = $this->getFormattedMasterValue(
+            'review_tools', $validatedData['review_tools']
+        );
     }
 
+        $this->formatAndStoreMasterOption('competency_name', $validatedData['competency_name']);
+    $this->formatAndStoreMasterOption('development_program', $validatedData['development_program']);
+    if (!empty($validatedData['review_tools'])) {
+        $this->formatAndStoreMasterOption('review_tools', $validatedData['review_tools']);
+    }
+
+    IndividualDevelopmentPlan::create($validatedData);
+    return redirect()->back()->with('success', 'Development Plan added successfully!');
+}
     /**
      * Delete Individual Development Plan (IDP) Data.
      */
@@ -456,6 +467,19 @@ $uniqueJobLevels = \App\Models\Employees::select('job_level')
         $idp->update($validatedData);
         return redirect()->back()->with('success', 'Development Plan updated successfully!');
     }
+
+    private function getFormattedMasterValue(string $type, string $value): string
+{
+    // to check if the data from data master so it doesn't need formatting
+    $exists = \App\Models\DevelopmentPlanMaster::where('type', $type)
+        ->where('value', $value)
+        ->exists();
+
+    if ($exists) {
+        return $value;
+    }
+    return \Illuminate\Support\Str::title($value);
+}
 
     private function formatAndStoreMasterOption(string $type, ?string $value): void
 {
