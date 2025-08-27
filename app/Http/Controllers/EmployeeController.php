@@ -25,6 +25,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 use App\Exports\ReportExport;
 use App\Models\Role;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -40,158 +41,165 @@ class EmployeeController extends Controller
 
 public function index($employeeId = null, Request $request)
 {
-    $employee = $employeeId
-        ? Employees::where('employee_id', $employeeId)->firstOrFail()
-        : Employees::firstOrFail();
+    try {
+        $employee = Employees::publicData()->where('employee_id', $employeeId)->firstOrFail();
+        $employeeId = $employee->employee_id;
 
-    $employeeId = $employee->employee_id;
-
-    $movements = MovementTransaction::where('employee_id', $employeeId)->get();
-    $promotions = PromotionTransaction::where('employee_id', $employeeId)->get();
-    
-    $mergedData = collect();
-
-    // 2. Proses data movement terlebih dahulu
-    foreach ($movements as $movement) {
-        $key = $movement->form . '_' . $movement->to; 
+        $movements = MovementTransaction::where('employee_id', $employeeId)->get();
+        $promotions = PromotionTransaction::where('employee_id', $employeeId)->get();
         
-        $types = [];
-        if (strtolower($movement->is_promotion) === 'yes') $types[] = 'Promotion';
-        if (strtolower($movement->is_demotion) === 'yes') $types[] = 'Demotion';
+        $mergedData = collect();
 
-        $mergedData[$key] = (object) [
-            'period_start'  => $movement->form,
-            'period_end'    => $movement->to,
-            'business_unit' => $movement->bu_name,
-            'department'    => $movement->unit_name,
-            'position'      => $movement->designation_name,
-            'grade'         => null,
-            'type'          => implode(', ', $types) ?: 'Transfer',
-        ];
-    }
+        // --- proses movements
+        foreach ($movements as $movement) {
+            $key = $movement->form . '_' . $movement->to; 
+            $types = [];
 
-    // 3. Proses data promotion dan gabungkan jika periodenya sama
-    foreach ($promotions as $promotion) {
-        $key = $promotion->form . '_' . $promotion->to;
+            if (strtolower($movement->is_promotion) === 'yes') $types[] = 'Promotion';
+            if (strtolower($movement->is_demotion) === 'yes') $types[] = 'Demotion';
 
-        if ($mergedData->has($key)) {
-            $mergedData[$key]->grade = $promotion->job_level;
-
-            if ($mergedData[$key]->type === 'Movement' && strtolower($promotion->is_promotion) === 'yes') {
-                 $mergedData[$key]->type = 'Promotion';
-            }
-        } 
-        else {
             $mergedData[$key] = (object) [
-                'period_start'  => $promotion->form,
-                'period_end'    => $promotion->to,
-                'business_unit' => null,
-                'department'    => null,
-                'position'      => null,
-                'grade'         => $promotion->job_level,
-                'type'          => strtolower($promotion->is_promotion) === 'yes' ? 'Promotion' : 'N/A',
+                'period_start'  => $movement->form,
+                'period_end'    => $movement->to,
+                'business_unit' => $movement->bu_name,
+                'department'    => $movement->unit_name,
+                'position'      => $movement->designation_name,
+                'grade'         => null,
+                'type'          => implode(', ', $types) ?: 'Transfer',
             ];
         }
+
+        // --- proses promotions
+        foreach ($promotions as $promotion) {
+            $key = $promotion->form . '_' . $promotion->to;
+
+            if ($mergedData->has($key)) {
+                $mergedData[$key]->grade = $promotion->job_level;
+
+                if ($mergedData[$key]->type === 'Movement' && strtolower($promotion->is_promotion) === 'yes') {
+                    $mergedData[$key]->type = 'Promotion';
+                }
+            } else {
+                $mergedData[$key] = (object) [
+                    'period_start'  => $promotion->form,
+                    'period_end'    => $promotion->to,
+                    'business_unit' => null,
+                    'department'    => null,
+                    'position'      => null,
+                    'grade'         => $promotion->job_level,
+                    'type'          => strtolower($promotion->is_promotion) === 'yes' ? 'Promotion' : 'N/A',
+                ];
+            }
+        }
+
+        $internalMovements = $mergedData->sortByDesc('period_start');
+
+        // --- Pagination IDP Data
+        $developmentModels = DevelopmentModel::all();
+        $paginatedPlans = [];
+        foreach ($developmentModels as $model) {
+            $paginatedPlans[$model->id] = IndividualDevelopmentPlan::where('employee_id', $employeeId)
+                ->where('development_model_id', $model->id)
+                ->orderBy('id', 'desc')
+                ->paginate(5, ['*'], 'page_model_' . $model->id);
+        }
+
+        $allAssessments = CompetencyAssessment::where('employee_id', $employeeId)
+            ->orderBy('period', 'desc')
+            ->get();
+
+        $assessmentsForJs = $allAssessments->keyBy('period');
+        $latestAssessment = $allAssessments->first();
+
+        if ($latestAssessment) {
+            $lastAssessmentYear = (int) $latestAssessment->period;
+            $currentYear = now()->year;
+            $needsRenewal = ($currentYear - $lastAssessmentYear) >= 2;
+        } else {
+            $needsRenewal = true;
+        }
+
+        $allMatrixGrades = MatrixGradeConfig::all()->groupBy(function ($item) {
+            return (string) $item->period;
+        });
+
+        $uniqueGradeLevels = MatrixGradeConfig::select('grade_level')
+            ->distinct()
+            ->orderBy('grade_level')
+            ->pluck('grade_level');
+
+        $resultSummary = ResultSummary::where('employee_id', $employeeId)->first();
+
+        $isIdpPaginationRequest = collect($request->keys())->some(function ($key) {
+            return str_starts_with($key, 'page_model_');
+        });
+
+        $latestIdp = IndividualDevelopmentPlan::where('employee_id', $employeeId)
+                                              ->latest('created_at')
+                                              ->first();
+
+        $activeTab = $isIdpPaginationRequest ? 'idp' : 'facecard';
+
+        $performanceAppraisals = PerformanceAppraisal::where('employee_id', $employeeId)->get();
+        $trainings = TrainingCertification::where('employee_id', $employeeId)->get();
+
+        $timestamps = [];
+
+        if ($resultSummary) {
+            $timestamps[] = $resultSummary->updated_at;
+        }
+        if ($performanceAppraisals->isNotEmpty()) {
+            $timestamps[] = $performanceAppraisals->max('updated_at');
+        }
+        if ($latestAssessment) {
+            $timestamps[] = $latestAssessment->updated_at;
+        }
+        if ($trainings->isNotEmpty()) {
+            $timestamps[] = $trainings->max('updated_at');
+        }
+
+        $validTimestamps = collect($timestamps)->filter();
+        $lastUpdatedTimestamp = $validTimestamps->isNotEmpty() ? $validTimestamps->max() : null;
+
+        $uniqueJobLevels = Employees::select('job_level')
+            ->whereNotNull('job_level')
+            ->distinct()
+            ->orderBy('job_level')
+            ->pluck('job_level');
+
+        return view('index', [ 
+            'employee' => $employee,
+            'formalEducations' => FormalEducation::where('employee_id', $employeeId)->orderBy('from_date', 'desc')->get(),
+            'workExperiences' => WorkExperience::where('employee_id', $employeeId)->orderBy('from_date', 'desc')->get(),
+            'trainings' => TrainingCertification::where('employee_id', $employeeId)->orderBy('start_date', 'desc')->get(),
+            'performanceAppraisals' => PerformanceAppraisal::where('employee_id', $employeeId)->orderByDesc('appraisal_year')->get(),
+            'resultSummary' => $resultSummary,
+            'activePermissions' => $this->getActivePermissions(),
+            'allMatrixGrades' => $allMatrixGrades,
+            'latestAssessment' => $latestAssessment, 
+            'assessmentsForJs' => $assessmentsForJs,
+            'competencyNames' => array_keys(CompetencyAssessment::getCompetencyMap()),
+            'needsRenewal' => $needsRenewal,
+            'uniqueGradeLevels' => $uniqueGradeLevels, 
+            'internalMovements' => $internalMovements,
+            'uniqueJobLevels' => $uniqueJobLevels,
+            'developmentModels' => $developmentModels,
+            'paginatedPlans' => $paginatedPlans,
+            'activeTab' => $activeTab,
+            'latestIdp' => $latestIdp,
+            'lastUpdatedTimestamp' => $lastUpdatedTimestamp,
+        ]);
+
+    } catch (ModelNotFoundException $e) {
+        return redirect()->back()->withErrors(['message' => 'Employee not found.']);
+    } catch (\Throwable $e) {
+        // Bisa juga diarahkan ke error view
+        return response()->view('facecard.list', [
+            'message' => $e->getMessage()
+        ], 500);
     }
-
-    // 4. Urutkan hasil akhir berdasarkan tanggal mulai
-    $internalMovements = $mergedData->sortByDesc('period_start');
-
-    // --- Pagination IDP Data ---
-    $developmentModels = DevelopmentModel::all();
-    $paginatedPlans = [];
-    foreach ($developmentModels as $model) {
-        $paginatedPlans[$model->id] = IndividualDevelopmentPlan::where('employee_id', $employeeId)
-            ->where('development_model_id', $model->id)
-            ->orderBy('id', 'desc')
-            ->paginate(5, ['*'], 'page_model_' . $model->id);
-    }
-    
-    $allAssessments = CompetencyAssessment::where('employee_id', $employeeId)
-    ->orderBy('period', 'desc')
-    ->get();
-    $assessmentsForJs = $allAssessments->keyBy('period');
-    $latestAssessment = $allAssessments->first();
-
-    if ($latestAssessment) {
-        $lastAssessmentYear = (int) $latestAssessment->period;
-        $currentYear = now()->year;
-
-        $needsRenewal = ($currentYear - $lastAssessmentYear) >= 2;
-    } else {
-        $needsRenewal = true;
-    }
-    
-    $allMatrixGrades = MatrixGradeConfig::all()->groupBy(function ($item) {
-        return (string) $item->period;
-    });
-
-    $uniqueGradeLevels = MatrixGradeConfig::select('grade_level')->distinct()->orderBy('grade_level')->pluck('grade_level');
-    $resultSummary = ResultSummary::where('employee_id', $employeeId)->first();
-    
-    $isIdpPaginationRequest = collect($request->keys())->some(function ($key) {
-        return str_starts_with($key, 'page_model_');
-    });
-
-    $latestIdp = IndividualDevelopmentPlan::where('employee_id', $employeeId)
-                                          ->latest('created_at')
-                                          ->first();
-
-    $activeTab = $isIdpPaginationRequest ? 'idp' : 'facecard';
-
-    $resultSummary = ResultSummary::where('employee_id', $employeeId)->first();
-    $performanceAppraisals = PerformanceAppraisal::where('employee_id', $employeeId)->get();
-    $trainings = TrainingCertification::where('employee_id', $employeeId)->get();
-
-    $timestamps = [];
-
-if ($resultSummary) {
-    $timestamps[] = $resultSummary->updated_at;
-}
-if ($performanceAppraisals->isNotEmpty()) {
-    $timestamps[] = $performanceAppraisals->max('updated_at');
-}
-if ($latestAssessment) {
-    $timestamps[] = $latestAssessment->updated_at;
-}
-if ($trainings->isNotEmpty()) {
-    $timestamps[] = $trainings->max('updated_at');
 }
 
-$validTimestamps = collect($timestamps)->filter();
-$lastUpdatedTimestamp = $validTimestamps->isNotEmpty() ? $validTimestamps->max() : null;
-
-$uniqueJobLevels = \App\Models\Employees::select('job_level')
-        ->whereNotNull('job_level')
-        ->distinct()
-        ->orderBy('job_level')
-        ->pluck('job_level');
-
-    return view('index', [ 
-        'employee' => $employee,
-        'formalEducations' => FormalEducation::where('employee_id', $employeeId)->orderBy('from_date', 'desc')->get(),
-        'workExperiences' => WorkExperience::where('employee_id', $employeeId)->orderBy('from_date', 'desc')->get(),
-        'trainings' => TrainingCertification::where('employee_id', $employeeId)->orderBy('start_date', 'desc')->get(),
-        'performanceAppraisals' => PerformanceAppraisal::where('employee_id', $employeeId)->orderByDesc('appraisal_year')->get(),
-        'resultSummary' => $resultSummary,
-        'activePermissions' => $this->getActivePermissions(),
-        'allMatrixGrades' => MatrixGradeConfig::all()->groupBy('period'),
-        'latestAssessment' => $latestAssessment, 
-        'assessmentsForJs' => $assessmentsForJs,
-        'competencyNames' => array_keys(CompetencyAssessment::getCompetencyMap()),
-        'needsRenewal' => $needsRenewal,
-        'uniqueGradeLevels' => $uniqueGradeLevels, 
-        'internalMovements' => $internalMovements,
-        'uniqueJobLevels' => $uniqueJobLevels,
-
-        // IDP Variable Pagination
-        'developmentModels' => $developmentModels,
-        'paginatedPlans' => $paginatedPlans,
-        'activeTab' => $activeTab,
-        'latestIdp' => $latestIdp,
-        'lastUpdatedTimestamp' => $lastUpdatedTimestamp,
-    ]);
-}
 
 
     // Facecard list

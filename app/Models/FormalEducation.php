@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 class FormalEducation extends Model
 {
     use HasFactory;
+    protected $connection = 'kpncorp';
     protected $table = 'formal_educations'; 
     protected $guarded = ['id'];
     public function employee()

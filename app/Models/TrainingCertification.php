@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 class TrainingCertification extends Model
 {
     use HasFactory;
+    protected $connection = 'kpncorp';
     protected $table = 'trainings_certifications'; 
     protected $guarded = ['id'];
     public function employee()

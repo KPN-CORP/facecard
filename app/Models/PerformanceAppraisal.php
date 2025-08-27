@@ -9,6 +9,8 @@ class PerformanceAppraisal extends Model
 {
     use HasFactory;
 
+    protected $connection = 'kpncorp';
+
     protected $table = 'performance_appraisals';
 
     protected $guarded = ['id'];
