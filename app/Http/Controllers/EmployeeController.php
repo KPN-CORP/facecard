@@ -218,16 +218,14 @@ public function index($employeeId = null, Request $request)
             if ($role) {
                 if (!empty($role->business_unit) && is_array($role->business_unit)) {
                     $query->whereIn('group_company', $role->business_unit);
-                    $hasFilter = true;
                 }
                 if (!empty($role->company) && is_array($role->company)) {
                     $query->whereIn('company_name', $role->company);
-                    $hasFilter = true;
                 }
                 if (!empty($role->location) && is_array($role->location)) {
                     $query->whereIn('office_area', $role->location);
-                    $hasFilter = true;
                 }
+                $hasFilter = true;
             }
         }
 
