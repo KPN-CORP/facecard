@@ -33,7 +33,7 @@ class Employees extends Model
 
     public function user()
     {
-        return $this->hasOne(User::class, 'employee_id', 'employee_id');
+        return $this->setConnection('mysql')->hasOne(User::class, 'employee_id', 'employee_id');
     }
     
     public function hasPermissionTo(string $permissionName): bool
@@ -47,12 +47,12 @@ class Employees extends Model
     }
      public function performanceAppraisals()
     {
-        return $this->hasMany(PerformanceAppraisal::class, 'employee_id', 'employee_id');
+        return $this->setConnection('mysql')->hasMany(PerformanceAppraisal::class, 'employee_id', 'employee_id');
     }
     public function developmentPlans()
 {
-    return $this->hasMany(IndividualDevelopmentPlan::class, 'employee_id', 'employee_id');
+    return $this->setConnection('mysql')->hasMany(IndividualDevelopmentPlan::class, 'employee_id', 'employee_id');
 }
     
-    public function resultSummary() { return $this->hasOne(ResultSummary::class, 'employee_id', 'employee_id'); }
+    public function resultSummary() { return $this->setConnection('mysql')->hasOne(ResultSummary::class, 'employee_id', 'employee_id'); }
 }
