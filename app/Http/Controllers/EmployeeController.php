@@ -204,40 +204,49 @@ public function index($employeeId = null, Request $request)
 
     // Facecard list
     public function facecardList(Request $request)
-{
-    $query = Employees::query();
-    $user = Auth::user();
+    {
+        $user = Auth::user();
+        $query = Employees::query();
+        $hasFilter = false;
 
-    if ($user && $user->isManager()) {
-        $query->where('manager_l1_id', $user->employee_id);
+        if ($user && $user->isManager()) {
+            $query->where('manager_l1_id', $user->employee_id);
+            $hasFilter = true;
 
-    } elseif ($user && $user->roles) {
-        $role = $user->roles()->first(); 
-        if ($role) {
-            if (!empty($role->business_unit) && is_array($role->business_unit)) {
-                $query->whereIn('group_company', $role->business_unit);
-            }
-            if (!empty($role->company) && is_array($role->company)) {
-                $query->whereIn('company_name', $role->company);
-            }
-            if (!empty($role->location) && is_array($role->location)) {
-                $query->whereIn('office_area', $role->location);
+        } elseif ($user && $user->roles) {
+            $role = $user->roles()->first(); 
+            if ($role) {
+                if (!empty($role->business_unit) && is_array($role->business_unit)) {
+                    $query->whereIn('group_company', $role->business_unit);
+                    $hasFilter = true;
+                }
+                if (!empty($role->company) && is_array($role->company)) {
+                    $query->whereIn('company_name', $role->company);
+                    $hasFilter = true;
+                }
+                if (!empty($role->location) && is_array($role->location)) {
+                    $query->whereIn('office_area', $role->location);
+                    $hasFilter = true;
+                }
             }
         }
-    }
-    $employees = $query->orderBy('fullname', 'asc')->get();
 
-    $pageTitle = 'Facecard'; 
-    if ($request->routeIs('idp.list')) {
-        $pageTitle = 'Individual Development Plan';
+        // kalau tidak ada filter → kosongkan hasil
+        $employees = $hasFilter 
+            ? $query->orderBy('fullname', 'asc')->get()
+            : collect();
+
+        $pageTitle = $request->routeIs('idp.list')
+            ? 'Individual Development Plan'
+            : 'Facecard';
+
+        return view('facecard_list', [
+            'pageTitle' => $pageTitle, 
+            'employees' => $employees,
+            'activePermissions' => $this->getActivePermissions()
+        ]);
     }
 
-    return view('facecard_list', [
-        'pageTitle' => $pageTitle, 
-        'employees' => $employees,
-        'activePermissions' => $this->getActivePermissions()
-    ]);
-}
 
 
     public function idpList(Request $request)
