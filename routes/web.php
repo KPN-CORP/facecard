@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\LoginController;
@@ -15,7 +16,7 @@ use App\Http\Controllers\IdpSettingController;
 | Web Routes
 |--------------------------------------------------------------------------
 */
-
+Route::get('auth-service', [AuthController::class, 'login']);
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -33,9 +34,9 @@ Route::post('/force-logout', [LoginController::class, 'logout'])->name('logout.f
 Route::middleware('auth')->group(function () {
     
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    Route::get('facecard', [EmployeeController::class, 'facecardList'])->name('facecard.list');
 
     // Main Page
-    Route::get('facecard', [EmployeeController::class, 'facecardList'])->name('facecard.list');
     Route::get('/employee/{employeeId?}', [EmployeeController::class, 'index'])->name('employee.profile');
     Route::put('/performance-appraisal/{appraisal}', [PerformanceAppraisalController::class, 'update'])->name('appraisal.update');
     Route::put('/competency-assessment/details/{assessment}', [CompetencyAssessmentController::class, 'updateDetails'])->name('assessment.updateDetails');
