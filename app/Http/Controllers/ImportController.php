@@ -45,6 +45,7 @@ class ImportController extends Controller
     }
 
     try {
+        // dd($importer);
         Excel::import($importer, $originalPath);
     } catch (\Exception $e) {
         return $this->handleFatalImportError($e, $type, $originalPath);
@@ -184,13 +185,11 @@ class ImportController extends Controller
             case 'talent_box':
         case 'talent_status':
             return new \App\Imports\TalentDataImport($type);
-        case 'internal_movement':
-            return new \App\Imports\InternalMovementImport();
         case 'proposed_grade':
             return new \App\Imports\ProposedGradeImport();
         default: 
             throw new \Exception("Invalid import type '{$type}' specified.");
-    }
+        }
     }
 
     private function handleFatalImportError(\Exception $e, string $type, string $originalPath)
