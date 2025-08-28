@@ -25,7 +25,7 @@ class User extends Authenticatable
 
     public function hasPermissionTo(string $permissionName): bool
     {
-        return $this->roles()->whereHas('permissions', function ($query) use ($permissionName) {
+        return $this->setConnection('mysql')->roles()->whereHas('permissions', function ($query) use ($permissionName) {
             $query->where('name', $permissionName);
         })->exists();
     }

@@ -38,10 +38,7 @@ class Employees extends Model
     
     public function hasPermissionTo(string $permissionName): bool
     {
-        if (!$this->user) {
-            return false;
-        }
-        return $this->user->roles()->whereHas('permissions', function ($query) use ($permissionName) {
+        return $this->setConnection('mysql')->roles()->whereHas('permissions', function ($query) use ($permissionName) {
             $query->where('name', $permissionName);
         })->exists();
     }
