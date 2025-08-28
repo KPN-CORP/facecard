@@ -48,7 +48,7 @@ class ProposedGradeImport implements ToModel, WithHeadingRow, WithValidation, Sk
     public function rules(): array
     {
         return [
-            '*.employee_id' => 'required',
+            '*.employee_id' => 'required|exists:kpncorp.employees,employee_id',
             '*.proposed_grade' => ['required', 'string', Rule::in($this->existingJobLevels)],
         ];
     }

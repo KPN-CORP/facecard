@@ -58,7 +58,7 @@ class CompetencyAssessmentImport implements ToModel, WithHeadingRow, WithValidat
     public function rules(): array
     {
         return [
-            '*.employee_id' => 'required',
+            '*.employee_id' => 'required|exists:kpncorp.employees,employee_id',
             '*.assessment_date' => [
                 'required',
                 'date_format:d-m-Y', 

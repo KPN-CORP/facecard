@@ -15,7 +15,7 @@ class CompetencyAssessmentController extends Controller
     {
         // Validasi semua input dari modal
         $validatedData = $request->validate([
-            'employee_id' => 'required|string',
+            'employee_id' => 'required|string|exists:kpncorp.employees,employee_id',
             'assessment_date' => [
     'required',
     'date',

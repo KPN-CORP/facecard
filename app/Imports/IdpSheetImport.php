@@ -73,7 +73,7 @@ class IdpSheetImport implements ToModel, WithHeadingRow, WithValidation, SkipsOn
     public function rules(): array
     {
         return [
-            '*.employee_id'       => 'required',
+            '*.employee_id'       => 'required|exists:kpncorp.employees,employee_id',
             '*.development_model' => 'required|string',
             '*.competency_type'   => 'required|string',
             '*.competency_name'   => 'required|string',
