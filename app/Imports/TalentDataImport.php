@@ -60,7 +60,7 @@ class TalentDataImport implements ToModel, WithHeadingRow, WithValidation, Skips
     {
         // Add validation for the new 'period' column
         $rules = [
-            '*.employee_id' => 'required|exists:kpncorp.employees,employee_id',
+            '*.employee_id' => 'required|exists:users,employee_id|size:11',
             '*.period'      => 'required|numeric|digits:4',
         ];
 
