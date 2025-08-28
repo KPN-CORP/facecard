@@ -296,7 +296,7 @@ public function index($employeeId = null, Request $request)
     public function storeResultSummary(Request $request)
 {
     $request->validate([
-        'employee_id' => 'required|string|exists:employees,employee_id',
+        'employee_id' => 'required|string',
     ]);
 
     // Hanya proses 'succession_summary', hapus blok 'details_summary'
@@ -385,7 +385,7 @@ public function index($employeeId = null, Request $request)
     public function storeDevelopmentPlan(Request $request)
     {
         $validatedData = $request->validate([
-            'employee_id' => 'required|string|exists:employees,employee_id',
+            'employee_id' => 'required|string',
             'development_model_id' => 'nullable|integer|exists:development_models,id',
             'competency_type' => 'required|string',
             'competency_name' => 'required|string',
@@ -516,7 +516,7 @@ public function index($employeeId = null, Request $request)
     public function importSingleDevelopmentPlan(Request $request)
 {
     $request->validate([
-        'employee_id' => 'required|string|exists:employees,employee_id',
+        'employee_id' => 'required|string',
         'idp_file' => 'required|file|mimes:xlsx,xls'
     ]);
 

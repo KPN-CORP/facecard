@@ -15,7 +15,7 @@ class CompetencyAssessmentController extends Controller
     {
         // Validasi semua input dari modal
         $validatedData = $request->validate([
-            'employee_id' => 'required|string|exists:employees,employee_id',
+            'employee_id' => 'required|string',
             'assessment_date' => [
     'required',
     'date',
@@ -38,7 +38,6 @@ class CompetencyAssessmentController extends Controller
             'relationship_building_score' => 'required|integer|min:0|max:4',
             'developing_others_score' => 'required|integer|min:0|max:4',
         ]);
-        dd($validatedData);
 
         // Logic Update-or-Create: Cari berdasarkan employee dan tahun asesmen
         CompetencyAssessment::updateOrCreate(
