@@ -46,6 +46,6 @@ class CompetencyAssessment extends Model
 
     public function employee()
     {
-        return $this->belongsTo(Employees::class, 'employee_id', 'employee_id');
+        return $this->setConnection('kpncorp')->belongsTo(Employees::class, 'employee_id', 'employee_id');
     }
 }

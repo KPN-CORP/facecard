@@ -20,7 +20,7 @@ class User extends Authenticatable
 
     public function employee(): HasOne
     {
-        return $this->hasOne(Employees::class,  'employee_id', 'employee_id');
+        return $this->setConnection('kpncorp')->hasOne(Employees::class,  'employee_id', 'employee_id');
     }
 
     public function hasPermissionTo(string $permissionName): bool
