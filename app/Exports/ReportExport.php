@@ -57,7 +57,7 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping, ShouldA
 
         if ($this->reportType === 'talent_report') {
             return array_merge($baseData, [
-                $employee->talent_status_for_year,
+                $employee->potential_for_year,
                 $employee->talent_box_for_year
             ]);
         }

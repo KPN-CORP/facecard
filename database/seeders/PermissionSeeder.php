@@ -19,7 +19,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'import_data_master', 'label' => 'Import Data Master', 'group' => 'Import Center'],
             ['name' => 'import_idp', 'label' => 'Import Individual Development Program', 'group' => 'Import Center'],
             ['name' => 'import_talent_box', 'label' => 'Import Talent Box', 'group' => 'Import Center'],
-            ['name' => 'import_talent_status', 'label' => 'Import Talent Status', 'group' => 'Import Center'],
+            ['name' => 'import_potential', 'label' => 'Import Talent Status', 'group' => 'Import Center'],
             ['name' => 'import_proposed_grade', 'label' => 'Import Proposed Grade', 'group' => 'Import Center'],
             
             // Grup: Report

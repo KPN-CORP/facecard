@@ -60,9 +60,9 @@ class MissingHeaderExport implements FromArray, WithHeadings
             // Hanya memerlukan employee_id dan talent_box
             return array_merge($headers, ['employee_id', 'talent_box']);
         
-        case 'talent_status':
-            // Hanya memerlukan employee_id dan talent_status
-            return array_merge($headers, ['employee_id', 'talent_status']);
+        case 'potential':
+            // Hanya memerlukan employee_id dan potential
+            return array_merge($headers, ['employee_id', 'potential']);
 
         case 'proposed_grade':
             // Hanya memerlukan employee_id dan proposed_grade

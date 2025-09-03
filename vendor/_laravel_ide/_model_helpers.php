@@ -3322,7 +3322,7 @@ namespace App\Models {
     /**
      * App\Models\PerformanceAppraisal
      *
-     * @property string|null $talent_status
+     * @property string|null $potential
      * @property string|null $talent_box
      * @property \Illuminate\Support\Carbon|null $updated_at
      * @property \Illuminate\Support\Carbon|null $created_at

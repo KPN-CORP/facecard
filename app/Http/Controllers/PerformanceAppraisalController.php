@@ -10,8 +10,8 @@ class PerformanceAppraisalController extends Controller
     public function update(Request $request, PerformanceAppraisal $appraisal)
     {
         $validated = $request->validate([
-            'talent_status' => 'required|string|max:100',
-            'talent_box' => 'required|string|max:100',
+            'potential' => 'nullable|string',
+            'talent_box' => 'nullable|string',
         ]);
 
         $appraisal->update($validated);

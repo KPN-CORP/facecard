@@ -183,7 +183,7 @@ class ImportController extends Controller
             case 'data_master': return new DataMasterImport();
             case 'idp': return new DevelopmentPlanImport();
             case 'talent_box':
-        case 'talent_status':
+        case 'potential':
             return new \App\Imports\TalentDataImport($type);
         case 'proposed_grade':
             return new \App\Imports\ProposedGradeImport();

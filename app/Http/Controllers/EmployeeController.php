@@ -558,7 +558,7 @@ public function showReport(Request $request)
     $selectedYear = $request->input('year', now()->year);
     $searchQuery = $request->input('search');
     $perPage = $request->input('per_page', 10);
-    $filters = $request->only(['business_unit', 'job_level', 'designation', 'unit', 'talent_status', 'talent_box']);
+    $filters = $request->only(['business_unit', 'job_level', 'designation', 'unit', 'potential', 'talent_box']);
 
     $query = Employees::query();
 
@@ -597,10 +597,10 @@ public function showReport(Request $request)
     }
 
     // Filter based on talent status, talent box, year
-    if (!empty($filters['talent_status'])) {
+    if (!empty($filters['potential'])) {
         $query->whereHas('performanceAppraisals', function ($q) use ($selectedYear, $filters) {
             $q->where('appraisal_year', $selectedYear)
-              ->where('talent_status', $filters['talent_status']);
+              ->where('potential', $filters['potential']);
         });
     }
     if (!empty($filters['talent_box'])) {
@@ -633,7 +633,7 @@ public function showReport(Request $request)
 
     foreach ($employees as $employee) {
         $appraisalForYear = $employee->performanceAppraisals->first();
-        $employee->talent_status_for_year = $appraisalForYear->talent_status ?? 'N/A';
+        $employee->potential_for_year = $appraisalForYear->potential ?? 'N/A';
         $employee->talent_box_for_year = $appraisalForYear->talent_box ?? 'N/A';
 
         $plans = $employee->developmentPlans;
@@ -678,7 +678,7 @@ public function showReport(Request $request)
         'businessUnits' => \App\Models\Employees::select('group_company')->whereNotNull('group_company')->distinct()->orderBy('group_company')->pluck('group_company'),
         'jobLevels'     => \App\Models\Employees::select('job_level')->whereNotNull('job_level')->distinct()->orderBy('job_level')->pluck('job_level'),
         'designations'  => \App\Models\Employees::select('designation_name')->whereNotNull('designation_name')->distinct()->orderBy('designation_name')->pluck('designation_name'),
-        'talentStatuses'=> \App\Models\PerformanceAppraisal::select('talent_status')->whereNotNull('talent_status')->distinct()->orderBy('talent_status')->pluck('talent_status'),
+        'talentStatuses'=> \App\Models\PerformanceAppraisal::select('potential')->whereNotNull('potential')->distinct()->orderBy('potential')->pluck('potential'),
         'talentBoxes'   => \App\Models\PerformanceAppraisal::select('talent_box')->whereNotNull('talent_box')->distinct()->orderBy('talent_box')->pluck('talent_box'),
         'units'         => $unitQuery->orderBy('unit')->pluck('unit'),
     ];
@@ -700,7 +700,7 @@ public function downloadReport(Request $request)
 
     // 1. Take all the filter on showReport
     $selectedYear = $request->input('year');
-    $filters = $request->only(['business_unit', 'job_level', 'designation', 'unit', 'talent_status', 'talent_box']);
+    $filters = $request->only(['business_unit', 'job_level', 'designation', 'unit', 'potential', 'talent_box']);
     $searchQuery = $request->input('search');
     $reportType = $request->report_name;
 
@@ -735,13 +735,13 @@ public function downloadReport(Request $request)
      if (!empty($filters['unit'])) {
         $query->where('unit', $filters['unit']);
     }
-    if (!empty($filters['talent_status']) || !empty($filters['talent_box'])) {
+    if (!empty($filters['potential']) || !empty($filters['talent_box'])) {
         $query->whereHas('performanceAppraisals', function ($q) use ($selectedYear, $filters) {
             if ($selectedYear) {
                 $q->where('appraisal_year', $selectedYear);
             }
-            if (!empty($filters['talent_status'])) {
-                $q->where('talent_status', $filters['talent_status']);
+            if (!empty($filters['potential'])) {
+                $q->where('potential', $filters['potential']);
             }
             if (!empty($filters['talent_box'])) {
                 $q->where('talent_box', $filters['talent_box']);
@@ -771,7 +771,7 @@ public function downloadReport(Request $request)
     // 5. Process Data (IMPORTANT : Before doing the export)
     foreach ($employeesToExport as $employee) {
         $appraisalForYear = $employee->performanceAppraisals->first();
-        $employee->talent_status_for_year = $appraisalForYear->talent_status ?? 'N/A';
+        $employee->potential_for_year = $appraisalForYear->potential ?? 'N/A';
         $employee->talent_box_for_year = $appraisalForYear->talent_box ?? 'N/A';
         
         $plans = $employee->developmentPlans;

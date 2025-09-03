@@ -23,8 +23,8 @@
                      </div>
                     <hr>
                     <div class="mb-3">
-                        <label for="edit_talent_status" class="form-label">Potential *</label>
-                        <select id="edit_talent_status" name="talent_status" class="form-select" required>
+                        <label for="edit_potential" class="form-label">Potential *</label>
+                        <select id="edit_potential" name="potential" class="form-select">
                             <option value="">Please select</option>
                             <option value="High">High</option>
                             <option value="Medium">Medium</option>
@@ -33,7 +33,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="edit_talent_box" class="form-label">Talent Box *</label>
-                        <select id="edit_talent_box" name="talent_box" class="form-select" required>
+                        <select id="edit_talent_box" name="talent_box" class="form-select">
                             <option value="">Please select</option>
                             <option value="Stars (1)">Stars (1)</option>
                             <option value="High Potentials (2)">High Potentials (2)</option>

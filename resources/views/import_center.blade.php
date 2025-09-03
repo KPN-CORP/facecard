@@ -100,7 +100,7 @@
                             @can('import_data_master') <option value="data_master">Data Master (Matrix Grades)</option> @endcan
                             @can('import_idp') <option value="idp">Individual Development Program</option> @endcan
                             @can('import_talent_box') <option value="talent_box">Talent Box</option> @endcan
-                            @can('import_talent_status') <option value="talent_status">Talent Status</option> @endcan
+                            @can('import_potential') <option value="potential">Potential</option> @endcan
                             @can('import_proposed_grade') <option value="proposed_grade">Proposed Grade</option> @endcan
                         </select>
                     </div>
@@ -110,7 +110,7 @@
                         <h4 class="alert-heading h6">Please ensure your Excel file format is correct:</h4>
                         <ul class="mb-0 small" style="padding-left: 1.2rem;">
                             <li>For 'employee_id' columns that start with '0', a single quote must be added before the number (example: `'012345`).</li>
-                            <li>The date format for 'assessment_date' is (YYYY-MM-DD).</li>
+                            <li>The date format for 'assessment_date' is date.</li>
                             <li>If there is no value for the competency score, please fill it with the number 0.</li>
                         </ul>
                     </div>
@@ -130,7 +130,7 @@
                             <li>The "Master" sheet is for reference only and contains the dropdown options for 'competency_name' and 'development_program'.</li>
                             <li>Ensure all data is entered according to the provided template.</li>
                             <li>For 'employee_id' columns that start with '0', a single quote must be added before the number (example: `'012345`).</li>
-                            <li>The date format for 'assessment_date' is (DD-MM-YYYY).</li>
+                            <li>The 'assessment_date' must use the Date format in Excel.</li>
                             <li>If there is no value for 'realization_date', please fill it with '-'.</li>
                         </ul>
                     </div>
@@ -155,7 +155,7 @@
                         <h4 class="alert-heading h6">Please ensure your Excel file format is correct:</h4>
                         <ul class="mb-0 small" style="padding-left: 1.2rem;">
                             <li>For 'employee_id' columns that start with '0', a single quote must be added before the number (example: `'012345`).</li>
-                            <li>The date format for 'from_date' and 'to_date' is (DD-MM-YYYY).</li>
+                            <li>The 'from_date' and 'to_date' must use the Date format in Excel.</li>
                             <li>The Job Grade must be filled with capital letters "(2A)".</li>
                         </ul>
                     </div>
@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'data_master': document.getElementById('data-master-instructions'),
         'idp': document.getElementById('idp-instructions'),
         'talent_box': document.getElementById('talent-instructions'),
-        'talent_status': document.getElementById('talent-instructions'), 
+        'potential': document.getElementById('talent-instructions'), 
         'proposed_grade': document.getElementById('proposed-instructions'),
         'internal_movement': document.getElementById('internal-instructions')
     };
@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'data_master': '{{ asset("templates/template_data_master.xlsx") }}',
         'idp': '{{ asset("templates/template_idp.xlsx") }}',
         'talent_box': '{{ asset("templates/template_talent_box.xlsx") }}',
-        'talent_status': '{{ asset("templates/template_talent_status.xlsx") }}',
+        'potential': '{{ asset("templates/template_potential.xlsx") }}',
         'proposed_grade': '{{ asset("templates/template_proposed_grade.xlsx") }}',
     };
 

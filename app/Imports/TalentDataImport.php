@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Models\PerformanceAppraisal; 
+use App\Models\PerformanceAppraisal;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
@@ -22,30 +22,38 @@ class TalentDataImport implements ToModel, WithHeadingRow, WithValidation, Skips
 
     public function model(array $row)
     {
-        // Ignore row if essential data is missing
         if (empty($row['employee_id']) || empty($row['period'])) {
             return null;
         }
 
+        $paExists = PerformanceAppraisal::where('employee_id', $row['employee_id'])
+                                        ->where('appraisal_year', $row['period'])
+                                        ->exists();
+
+        // If PA doesn't exist, failure will be shown 
+        if (!$paExists) {
+            $this->onFailure(new Failure(
+                $this->successCount + count($this->failures) + 2, 
+                'period', 
+                ['No Performance Appraisal found for this employee in the year ' . $row['period'] . '.'], 
+                $row 
+            ));
+            return null; 
+        }
+
         $data = [];
-        // Map the correct data based on the import type
         if ($this->importType === 'talent_box') {
             $data['talent_box'] = $row['talent_box'];
-        } elseif ($this->importType === 'talent_status') {
-            $data['talent_status'] = $row['talent_status'];
+        } elseif ($this->importType === 'potential') {
+            $data['potential'] = $row['potential'];
         }
 
         if (empty($data)) {
             return null;
         }
         
-        // Use updateOrCreate on the PerformanceAppraisal model
-        // It will find a record by employee_id AND year, or create a new one.
         $appraisal = PerformanceAppraisal::updateOrCreate(
-            [
-                'employee_id'    => $row['employee_id'],
-                'appraisal_year' => $row['period'],
-            ],
+            ['employee_id' => $row['employee_id'], 'appraisal_year' => $row['period']],
             $data
         );
 
@@ -56,19 +64,18 @@ class TalentDataImport implements ToModel, WithHeadingRow, WithValidation, Skips
         return $appraisal;
     }
 
+    // Biarkan validasi dasar di sini
     public function rules(): array
     {
-        // Add validation for the new 'period' column
         $rules = [
             '*.employee_id' => 'required|exists:users,employee_id|size:11',
             '*.period'      => 'required|numeric|digits:4',
         ];
 
-        // Add specific rules for each import type
         if ($this->importType === 'talent_box') {
             $rules['*.talent_box'] = 'required|string';
-        } elseif ($this->importType === 'talent_status') {
-            $rules['*.talent_status'] = 'required|string';
+        } elseif ($this->importType === 'potential') {
+            $rules['*.potential'] = 'required|string';
         }
 
         return $rules;

@@ -32,7 +32,7 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     @can('download_talent')
-                    <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); app.downloadReport('talent_report');">Talent Status & Talent Box</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); app.downloadReport('talent_report');">Potential & Talent Box</a></li>
                     @endcan
                     @can('download_idp_progress')
                     <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); app.downloadReport('idp_progress');">IDP Progress</a></li>
@@ -90,11 +90,11 @@
         </select>
     </div>
                     <div class="col">
-                        <label for="talent_status" class="form-label mb-1 small text-muted">Talent Status</label>
-                        <select name="talent_status" id="talent_status" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <label for="potential" class="form-label mb-1 small text-muted">Talent Status</label>
+                        <select name="potential" id="potential" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">All</option>
                              @foreach($filterOptions['talentStatuses'] as $option)
-                                <option value="{{ $option }}" @if(request('talent_status') == $option) selected @endif>{{ $option }}</option>
+                                <option value="{{ $option }}" @if(request('potential') == $option) selected @endif>{{ $option }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -141,7 +141,7 @@
                                 <td>{{ $employee->designation_name ?? 'N/A' }}</td>
                                 <td>{{ $employee->unit ?? 'N/A' }}</td>
                                 @can('view_facecard_report')
-                                    <td>{{ $employee->talent_status_for_year }}</td>
+                                    <td>{{ $employee->potential_for_year }}</td>
                                     <td>{{ $employee->talent_box_for_year }}</td>
                                 @endcan
                                 @can('view_idp_report')

@@ -11,7 +11,7 @@ use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Validators\Failure;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
-use Carbon\Carbon; 
+use Carbon\Carbon;
 
 class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure, SkipsEmptyRows
 {
@@ -26,15 +26,38 @@ class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, Wi
         $this->developmentModelsMap = DevelopmentModel::all()->pluck('id', 'percentage');
     }
 
+    public function prepareForValidation($data, $index)
+    {
+        $parseDate = function($dateValue) {
+            if (empty($dateValue) || $dateValue === '-') {
+                return null;
+            }
+            if (is_numeric($dateValue)) {
+                return Date::excelToDateTimeObject($dateValue)->format('Y-m-d');
+            }
+            try {
+                // Carbon::parse flexible for format d-m-Y, Y-m-d, dll.
+                return Carbon::parse($dateValue)->format('Y-m-d');
+            } catch (\Exception $e) {
+                return $dateValue; 
+            }
+        };
+
+        $data['time_frame_start'] = $parseDate($data['time_frame_start'] ?? null);
+        $data['time_frame_end'] = $parseDate($data['time_frame_end'] ?? null);
+        $data['realization_date'] = $parseDate($data['realization_date'] ?? null);
+
+        return $data;
+    }
+
     public function model(array $row)
     {
-        // Lewati baris jika kolom kunci kosong
         if (empty($row['competency_type']) || empty($row['development_model'])) {
             return null;
         }
-        
-        // Logika untuk mengekstrak angka dari 'development_model'
-        $modelId = null; 
+
+        // extract 'development_model'
+        $modelId = null;
         if (isset($row['development_model'])) {
             preg_match('/^\d+/', (string) $row['development_model'], $matches);
             if (!empty($matches)) {
@@ -43,39 +66,22 @@ class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, Wi
             }
         }
 
-        // Lewati baris jika model tidak ditemukan di database
         if (is_null($modelId)) {
-            return null; 
+            return null;
         }
-
-        // Fungsi untuk parsing tanggal dengan format DD-MM-YYYY
-        $parseDate = function($dateValue) {
-            if (empty($dateValue) || $dateValue === '-') {
-                return null;
-            }
-            if (is_numeric($dateValue)) {
-                return Date::excelToDateTimeObject($dateValue);
-            }
-            try {
-                return Carbon::createFromFormat('d-m-Y', $dateValue);
-            } catch (\Exception $e) {
-                return null; 
-            }
-        };
-
         $this->successCount++;
 
         return new IndividualDevelopmentPlan([
-            'employee_id'          => $this->employee_id, // Gunakan ID dari constructor
-            'development_model_id' => $modelId, 
+            'employee_id'          => $this->employee_id,
+            'development_model_id' => $modelId,
             'competency_type'      => $row['competency_type'],
             'competency_name'      => $row['competency_name'],
             'review_tools'         => $row['review_tools'],
             'development_program'  => $row['development_program'],
             'expected_outcome'     => $row['expected_outcome'],
-            'time_frame_start'     => $parseDate($row['time_frame_start']),
-            'time_frame_end'       => $parseDate($row['time_frame_end']),
-            'realization_date'     => $parseDate($row['realization_date']),
+            'time_frame_start'     => $row['time_frame_start'],
+            'time_frame_end'       => $row['time_frame_end'],
+            'realization_date'     => $row['realization_date'],
             'result_evidence'      => $row['result_evidence'],
         ]);
     }
@@ -83,18 +89,16 @@ class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, Wi
     public function rules(): array
     {
         return [
-            // Aturan untuk melarang keberadaan kolom 'employee_id'
             '*.employee_id'       => 'prohibited',
-
-            // Aturan validasi lain disamakan dengan importer sebelumnya
             '*.development_model' => 'required|string',
             '*.competency_type'   => 'required|string',
             '*.competency_name'   => 'required|string',
-            '*.time_frame_start'  => ['required', 'date_format:d-m-Y', 'before_or_equal:today'],
-            '*.time_frame_end'    => ['required', 'date_format:d-m-Y', 'before_or_equal:today'],
+            '*.time_frame_start'  => ['required', 'date', 'before_or_equal:today'],
+            '*.time_frame_end'    => ['required', 'date', 'after_or_equal:*.time_frame_start', 'before_or_equal:today'],
             '*.realization_date'  => [
-                'nullable', 
-                'date_format:d-m-Y',
+                'nullable',
+                'date',
+                'after_or_equal:*.time_frame_start',
                 'before_or_equal:today',
             ],
         ];
@@ -103,12 +107,10 @@ class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, Wi
     public function customValidationMessages()
     {
         return [
-            // Pesan error kustom untuk aturan 'prohibited'
             '*.employee_id.prohibited' => 'The employee_id column is not necessary and should be removed from the template.',
-            
-            // Pesan error kustom untuk validasi tanggal
-            '*.date_format' => 'The :attribute must match the format DD-MM-YYYY.',
-            '*.before_or_equal' => 'The :attribute must be a date before or equal to today.',
+            '*.date'                   => 'The :attribute field must be a valid date.',
+            '*.before_or_equal'        => 'The :attribute must be a date before or equal to today.',
+            '*.after_or_equal'         => 'The :attribute must be a date after or on the start date.',
         ];
     }
 
@@ -116,7 +118,7 @@ class SingleEmployeeDevelopmentPlanImport implements ToModel, WithHeadingRow, Wi
     {
         $this->failures = array_merge($this->failures, $failures);
     }
-    
+
     public function failures(): array
     {
         return $this->failures;

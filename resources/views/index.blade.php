@@ -243,21 +243,21 @@
                                 <table class="table table-bordered table-hover text-center" style="font-size: 0.9rem;">
                                     <thead class="table-light align-middle">
                                         <tr>
+                                            <th>Join Date</th>
+                                            <th>Resign Date</th>
                                             <th>Company</th>
                                             <th>Position</th>
                                             <th>Department</th>
-                                            <th>Join Date</th>
-                                            <th>Resign Date</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse ($workExperiences as $work)
                                         <tr>
+                                            <td>{{\Carbon\Carbon::parse($work->from_date)->format('d/m/Y')}}</td>
+                                            <td>{{\Carbon\Carbon::parse($work->to_date)->format('d/m/Y')}}</td>
                                             <td class="text-start">{{$work->previous_company_name}}</td>
                                             <td class="text-start">{{$work->title}}</td>
                                             <td>{{$work->summary}}</td>
-                                            <td>{{\Carbon\Carbon::parse($work->from_date)->format('d/m/Y')}}</td>
-                                            <td>{{\Carbon\Carbon::parse($work->to_date)->format('d/m/Y')}}</td>
                                         </tr>
                                         @empty
                                         <tr><td colspan="5" class="text-center p-4">No work experience data.</td></tr>
@@ -280,19 +280,19 @@
                                 <table class="table table-bordered table-hover text-center" style="font-size: 0.9rem;">
                                     <thead class="table-light align-middle">
                                         <tr>
-                                            <th>Training Name</th>
-                                            <th>Organizer</th>
                                             <th>Start Date</th>
                                             <th>End Date</th>
+                                            <th>Training Name</th>
+                                            <th>Organizer</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse ($trainings as $train)
                                         <tr>
-                                            <td class="text-start">{{$train->training_name}}</td>
-                                            <td>{{$train->organizer}}</td>
                                             <td>{{\Carbon\Carbon::parse($train->start_date)->format('d M Y')}}</td>
                                             <td>{{\Carbon\Carbon::parse($train->end_date)->format('d M Y')}}</td>
+                                            <td class="text-start">{{$train->training_name}}</td>
+                                            <td>{{$train->organizer}}</td>
                                         </tr>
                                         @empty
                                         <tr><td colspan="4" class="text-center p-4">No training data.</td></tr>
@@ -363,7 +363,7 @@
                                             <td>{{ $appraisal->appraisal_year }}</td>
                                             <td>{{ $appraisal->grade }}</td>
                                             @can('input_year_on_year')
-                                            <td>{{ $appraisal->talent_status ?? '-' }}</td>
+                                            <td>{{ $appraisal->potential ?? '-' }}</td>
                                             <td>{{ $appraisal->talent_box ?? '-' }}</td>
                                             <td><button class="btn btn-sm btn-outline-warning" onclick='app.openNineBoxEditModal({{ json_encode($appraisal) }})'>Edit</button></td>
                                             @endcan
@@ -790,7 +790,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         document.getElementById('edit_appraisal_year').value = appraisal.appraisal_year;
         document.getElementById('edit_performance_grade').value = appraisal.grade;
-        document.getElementById('edit_talent_status').value = appraisal.talent_status || "";
+        document.getElementById('edit_potential').value = appraisal.potential || "";
         document.getElementById('edit_talent_box').value = appraisal.talent_box || "";
         
         app.openModal('nineBoxMappingModal');
